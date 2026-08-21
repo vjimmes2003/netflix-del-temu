@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}
+Crear cuenta — Netflix del Temu
+{% endblock %}
+
+
+{% block content %}
+
+<main class="form-page">
+
+    <section class="form-card">
+
+        <p class="eyebrow">EMPIEZA TU CATÁLOGO</p>
+
+        <h1 class="form-title">
+            Crear una cuenta
+        </h1>
+
+        <form method="post">
+
+            <label class="field">
+                <span>Nombre de usuario</span>
+
+                <input
+                    type="text"
+                    name="username"
+                    minlength="3"
+                    required
+                    autocomplete="username"
+                >
+            </label>
+
+            <label class="field">
+                <span>Nombre visible</span>
+
+                <input
+                    type="text"
+                    name="display_name"
+                    autocomplete="name"
+                >
+            </label>
+
+            <label class="field">
+                <span>Correo electrónico</span>
+
+                <input
+                    type="email"
+                    name="email"
+                    required
+                    autocomplete="email"
+                >
+            </label>
+
+            <label class="field">
+                <span>Contraseña</span>
+
+                <input
+                    type="password"
+                    name="password"
+                    minlength="8"
+                    required
+                    autocomplete="new-password"
+                >
+            </label>
+
+            <label class="field">
+                <span>Repetir contraseña</span>
+
+                <input
+                    type="password"
+                    name="password_confirmation"
+                    minlength="8"
+                    required
+                    autocomplete="new-password"
+                >
+            </label>
+
+            <button
+                type="submit"
+                class="button button-primary form-submit"
+            >
+                Crear cuenta
+            </button>
+
+        </form>
+
+        <p class="form-footer">
+            ¿Ya tienes cuenta?
+
+            <a href="{{ url_for('auth.login') }}">
+                Inicia sesión
+            </a>
+        </p>
+
+    </section>
+
+</main>
+
+{% endblock %}

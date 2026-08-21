@@ -36,23 +36,11 @@ python -m venv .venv
 .venv\Scripts\activate
 ```
 
-Se preparó una estructura modular con carpetas para aplicación, base de datos, scripts y documentación.
-
 Flask se configuró mediante `create_app()` en `app/__init__.py`, utilizando `run.py` como punto de entrada.
 
-También se creó una landing inicial con:
-
-- mensaje principal;
-- acceso a registro e inicio de sesión;
-- estilos propios en tonos oscuros y violeta.
+También se creó una landing inicial con estilos propios y accesos a registro e inicio de sesión.
 
 ## Verificación
-
-```powershell
-python run.py
-```
-
-Resultados:
 
 | Prueba | Resultado |
 |---|---|
@@ -85,12 +73,7 @@ Diseñar e implementar el modelo de datos de la aplicación utilizando SQLite y 
 
 ## Modelo
 
-El esquema incluye **16 tablas** organizadas en cuatro bloques:
-
-- usuarios;
-- catálogo audiovisual;
-- actividad y valoraciones;
-- clasificación mediante géneros, países y etiquetas.
+El esquema incluye **16 tablas** para usuarios, catálogo audiovisual, actividad, valoraciones y clasificación.
 
 Las series se estructuran mediante:
 
@@ -98,22 +81,17 @@ Las series se estructuran mediante:
 MEDIA → SEASONS → EPISODES
 ```
 
-Las relaciones N:M se resuelven mediante tablas intermedias como `favorites`, `media_genres`, `media_countries` y `media_tags`.
-
-El modelo también incorpora borrado lógico mediante `is_active` e `is_visible`.
+Las relaciones N:M se resuelven mediante tablas intermedias.
 
 ## Implementación
 
-El esquema completo se definió en:
+Archivos principales:
 
 ```text
 database/schema.sql
-```
-
-El acceso a SQLite se implementó en:
-
-```text
 app/db.py
+scripts/check_db.py
+scripts/validate_schema.py
 ```
 
 La base de datos se crea en:
@@ -122,62 +100,43 @@ La base de datos se crea en:
 instance/netflix_del_temu.sqlite3
 ```
 
-y puede inicializarse mediante:
+Inicialización:
 
 ```powershell
 python -m flask --app run init-db
 ```
 
-Se añadieron claves primarias, claves foráneas, restricciones `UNIQUE`, `CHECK` e índices para las consultas más habituales.
+El esquema incluye claves primarias, claves foráneas, restricciones `UNIQUE`, `CHECK` e índices.
 
 ## Validación
-
-Se crearon dos scripts auxiliares:
-
-```text
-scripts/check_db.py
-scripts/validate_schema.py
-```
-
-Resultados obtenidos:
 
 | Comprobación | Resultado |
 |---|---|
 | Tablas creadas | 16 |
 | Foreign Keys | Activadas |
 | `PRAGMA integrity_check` | `ok` |
-| Usuarios duplicados | Bloqueados |
-| Roles inválidos | Bloqueados |
-| Foreign Keys inválidas | Bloqueadas |
-| Favoritos duplicados | Bloqueados |
-| Valoraciones fuera de 1–10 | Bloqueadas |
-| Relación serie → temporada → episodio | Correcta |
+| Restricciones `UNIQUE` | Correctas |
+| Restricciones `CHECK` | Correctas |
 | Relaciones N:M | Correctas |
+| Serie → temporada → episodio | Correcta |
 
-Las pruebas se ejecutan sobre una base de datos temporal en memoria, evitando modificar los datos reales.
+Las pruebas se realizan sobre una base de datos temporal en memoria.
 
-## Diagrama
-
-El modelo entidad-relación se documentó en:
+## Diagrama y evidencias
 
 ```text
 documentation/diagrams/modelo_er.md
-```
-
-## Evidencias
-
-```text
 documentation/screenshots/fase2_01_validacion_schema.png
 documentation/screenshots/fase2_02_modelo_er.png
 ```
 
 ## Decisiones técnicas
 
-- `tmdb_id` puede ser `NULL` para permitir contenido creado manualmente.
-- Las estadísticas se calcularán mediante consultas SQL y no mediante una tabla específica.
-- Reglas como impedir temporadas en películas o películas dentro de `movie_watches` se controlarán desde la lógica de aplicación.
+- `tmdb_id` puede ser `NULL` para admitir contenido creado manualmente.
+- Las estadísticas se calcularán mediante consultas SQL.
+- Algunas reglas de negocio se validarán desde la lógica Python.
 
-## Commit de cierre
+## Commit
 
 ```text
 feat: implement SQLite database schema
@@ -187,9 +146,88 @@ feat: implement SQLite database schema
 
 ---
 
+# Fase 3 — Autenticación y control de acceso
+
+## Objetivo
+
+Implementar registro, inicio y cierre de sesión, control de roles y protección de rutas privadas.
+
+## Implementación
+
+Se incorporó **Flask-Login** para gestionar sesiones y autenticación.
+
+La clase `User`, basada en `UserMixin`, representa al usuario autenticado y aporta una primera aplicación directa de programación orientada a objetos.
+
+Funciones implementadas:
+
+- registro de clientes;
+- inicio de sesión mediante usuario o correo;
+- cierre de sesión;
+- creación de administradores mediante comando CLI;
+- control de usuarios activos;
+- rutas privadas mediante `@login_required`;
+- rutas administrativas mediante `@admin_required`.
+
+Las contraseñas se almacenan mediante funciones de hash de Werkzeug y nunca en texto plano.
+
+Archivos principales:
+
+```text
+app/auth.py
+app/admin.py
+app/catalog.py
+app/templates/auth/
+app/templates/admin/
+app/templates/base.html
+app/templates/catalog.html
+```
+
+## Control de acceso
+
+| Prueba | Resultado |
+|---|---|
+| Registro de cliente | Correcto |
+| Login | Correcto |
+| Logout | Correcto |
+| `/catalog` sin sesión | Redirige a login |
+| `/admin/` como cliente | HTTP 403 |
+| `/admin/` como administrador | Acceso permitido |
+| Usuario inactivo | Acceso bloqueado |
+
+## Errores personalizados
+
+Se añadieron páginas integradas con el diseño general para:
+
+- `401 Unauthorized`
+- `403 Forbidden`
+- `404 Not Found`
+- `405 Method Not Allowed`
+- `500 Internal Server Error`
+
+Los errores `403`, `404` y `405` se comprobaron manualmente.
+
+## Evidencias
+
+```text
+documentation/screenshots/fase3_01_login.png
+documentation/screenshots/fase3_02_cliente_autenticado.png
+documentation/screenshots/fase3_03_acceso_denegado.png
+documentation/screenshots/fase3_04_panel_admin.png
+```
+
+## Commit de cierre
+
+```text
+feat: implement authentication and access control
+```
+
+**Estado: Fase 3 completada.**
+
+---
+
 # Flujo de trabajo
 
-Cada fase seguirá el mismo proceso:
+Cada fase sigue el mismo proceso:
 
 1. Diseñar.
 2. Implementar.
@@ -205,6 +243,8 @@ Cada fase seguirá el mismo proceso:
 # Fuentes técnicas
 
 - Flask: https://flask.palletsprojects.com/
+- Flask-Login: https://flask-login.readthedocs.io/
+- Werkzeug Security: https://werkzeug.palletsprojects.com/
 - Python `sqlite3`: https://docs.python.org/3/library/sqlite3.html
 - TMDB API: https://developer.themoviedb.org/
 - Bootstrap: https://getbootstrap.com/

@@ -1,62 +1,73 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
+{% extends "base.html" %}
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+{% block title %}
+Netflix del Temu
+{% endblock %}
 
-    <title>Netflix del Temu</title>
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}"
-    >
-</head>
+{% block content %}
 
-<body>
+<main class="landing">
 
-    <main class="landing">
+    <section class="hero">
 
-        <section class="hero">
+        <p class="eyebrow">
+            TU CATÁLOGO AUDIOVISUAL
+        </p>
 
-            <p class="eyebrow">
-                TU CATÁLOGO AUDIOVISUAL
-            </p>
+        <h1>
+            Todo lo que ves.<br>
+            Todo lo que quieres ver.
+        </h1>
 
-            <h1>
-                Todo lo que ves.<br>
-                Todo lo que quieres ver.
-            </h1>
+        <p class="description">
+            Lleva el control de tus películas y series,
+            descubre nuevo contenido y consulta todo
+            tu historial audiovisual en un mismo lugar.
+        </p>
 
-            <p class="description">
-                Lleva el control de tus películas y series,
-                descubre nuevo contenido y consulta todo
-                tu historial audiovisual en un mismo lugar.
-            </p>
+        <div class="actions">
 
-            <div class="actions">
+            {% if current_user.is_authenticated %}
 
-                <a href="#" class="button button-primary">
+                <a
+                    href="{{ url_for('catalog.catalog') }}"
+                    class="button button-primary"
+                >
+                    Ir al catálogo
+                </a>
+
+            {% else %}
+
+                <a
+                    href="{{ url_for('auth.register') }}"
+                    class="button button-primary"
+                >
                     Crear una cuenta
                 </a>
 
-                <a href="#" class="button button-secondary">
+                <a
+                    href="{{ url_for('auth.login') }}"
+                    class="button button-secondary"
+                >
                     Iniciar sesión
                 </a>
 
-            </div>
+            {% endif %}
+
+        </div>
+
+        {% if not current_user.is_authenticated %}
 
             <p class="catalog-message">
                 ¿Quieres explorar nuestro catálogo?
                 Regístrate para empezar.
             </p>
 
-        </section>
+        {% endif %}
 
-    </main>
+    </section>
 
-</body>
-</html>
+</main>
+
+{% endblock %}

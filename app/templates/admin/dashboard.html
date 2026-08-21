@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}
+Administración — Netflix del Temu
+{% endblock %}
+
+
+{% block content %}
+
+<main class="page-shell">
+
+    <section class="panel">
+
+        <p class="eyebrow">
+            ADMINISTRACIÓN
+        </p>
+
+        <h1 class="page-title">
+            Panel de administración
+        </h1>
+
+        <p class="description">
+            Acceso autorizado para
+            {{ current_user.display_name }}.
+        </p>
+
+        <p class="role-badge">
+            Rol: {{ current_user.role }}
+        </p>
+
+    </section>
+
+</main>
+
+{% endblock %}

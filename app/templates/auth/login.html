@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}
+Iniciar sesión — Netflix del Temu
+{% endblock %}
+
+
+{% block content %}
+
+<main class="form-page">
+
+    <section class="form-card">
+
+        <p class="eyebrow">BIENVENIDO DE NUEVO</p>
+
+        <h1 class="form-title">
+            Iniciar sesión
+        </h1>
+
+        <form method="post">
+
+            <label class="field">
+                <span>Usuario o correo electrónico</span>
+
+                <input
+                    type="text"
+                    name="identifier"
+                    required
+                    autocomplete="username"
+                >
+            </label>
+
+            <label class="field">
+                <span>Contraseña</span>
+
+                <input
+                    type="password"
+                    name="password"
+                    required
+                    autocomplete="current-password"
+                >
+            </label>
+
+            <button
+                type="submit"
+                class="button button-primary form-submit"
+            >
+                Iniciar sesión
+            </button>
+
+        </form>
+
+        <p class="form-footer">
+            ¿No tienes cuenta?
+
+            <a href="{{ url_for('auth.register') }}">
+                Regístrate
+            </a>
+        </p>
+
+    </section>
+
+</main>
+
+{% endblock %}

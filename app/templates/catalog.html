@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}
+Catálogo — Netflix del Temu
+{% endblock %}
+
+
+{% block content %}
+
+<main class="page-shell">
+
+    <section class="panel">
+
+        <p class="eyebrow">
+            ÁREA PRIVADA
+        </p>
+
+        <h1 class="page-title">
+            Hola, {{ current_user.display_name }}
+        </h1>
+
+        <p class="description">
+            Has iniciado sesión correctamente.
+            El catálogo audiovisual se implementará
+            en una fase posterior.
+        </p>
+
+        <p class="role-badge">
+            Rol: {{ current_user.role }}
+        </p>
+
+    </section>
+
+</main>
+
+{% endblock %}
