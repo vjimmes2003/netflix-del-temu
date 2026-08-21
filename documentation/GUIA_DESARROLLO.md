@@ -156,31 +156,19 @@ Implementar registro, inicio y cierre de sesión, control de roles y protección
 
 Se incorporó **Flask-Login** para gestionar sesiones y autenticación.
 
-La clase `User`, basada en `UserMixin`, representa al usuario autenticado y aporta una primera aplicación directa de programación orientada a objetos.
+La clase `User`, basada en `UserMixin`, representa al usuario autenticado y aporta una aplicación directa de programación orientada a objetos.
 
 Funciones implementadas:
 
 - registro de clientes;
 - inicio de sesión mediante usuario o correo;
 - cierre de sesión;
-- creación de administradores mediante comando CLI;
+- creación de administradores por CLI;
 - control de usuarios activos;
 - rutas privadas mediante `@login_required`;
 - rutas administrativas mediante `@admin_required`.
 
-Las contraseñas se almacenan mediante funciones de hash de Werkzeug y nunca en texto plano.
-
-Archivos principales:
-
-```text
-app/auth.py
-app/admin.py
-app/catalog.py
-app/templates/auth/
-app/templates/admin/
-app/templates/base.html
-app/templates/catalog.html
-```
+Las contraseñas se almacenan mediante hash de Werkzeug.
 
 ## Control de acceso
 
@@ -192,19 +180,16 @@ app/templates/catalog.html
 | `/catalog` sin sesión | Redirige a login |
 | `/admin/` como cliente | HTTP 403 |
 | `/admin/` como administrador | Acceso permitido |
-| Usuario inactivo | Acceso bloqueado |
 
 ## Errores personalizados
 
-Se añadieron páginas integradas con el diseño general para:
+Se añadieron páginas personalizadas para:
 
-- `401 Unauthorized`
-- `403 Forbidden`
-- `404 Not Found`
-- `405 Method Not Allowed`
-- `500 Internal Server Error`
-
-Los errores `403`, `404` y `405` se comprobaron manualmente.
+- 401
+- 403
+- 404
+- 405
+- 500
 
 ## Evidencias
 
@@ -215,13 +200,116 @@ documentation/screenshots/fase3_03_acceso_denegado.png
 documentation/screenshots/fase3_04_panel_admin.png
 ```
 
-## Commit de cierre
+## Commit
 
 ```text
 feat: implement authentication and access control
 ```
 
 **Estado: Fase 3 completada.**
+
+---
+---
+
+
+# Fase 4 — Integración con TMDB
+
+## Objetivo
+
+Conectar la aplicación con TMDB e importar contenido audiovisual real a la base de datos local.
+
+## Implementación
+
+Se creó la clase `TMDBClient` para centralizar:
+
+- autenticación mediante token;
+- peticiones HTTP;
+- idioma de respuesta;
+- películas;
+- series;
+- temporadas;
+- episodios;
+- construcción de URLs de imágenes.
+
+El token se carga desde `.env` y no se almacena en Git.
+
+Archivos principales:
+
+```text
+app/tmdb_client.py
+scripts/test_tmdb.py
+scripts/import_tmdb.py
+scripts/check_catalog.py
+```
+
+## Importación
+
+El importador sincroniza:
+
+- películas;
+- series;
+- temporadas;
+- episodios;
+- géneros;
+- países;
+- etiquetas.
+
+Se utiliza `UPSERT` para actualizar registros existentes sin duplicarlos.
+
+La importación permite elegir cantidades y decidir si se descargan episodios:
+
+```powershell
+python .\scripts\import_tmdb.py --movies 100 --series 50
+```
+
+Los episodios pueden incluirse mediante:
+
+```text
+--episodes
+```
+
+## Validación
+
+La conexión se comprobó con una película y una serie reales.
+
+Resultado final del catálogo de prueba:
+
+| Elemento | Cantidad |
+|---|---:|
+| Películas | 100 |
+| Series | 50 |
+| Temporadas | 673 |
+| Episodios | 57.637 |
+| Géneros | 26 |
+| Países | 30 |
+| Etiquetas | 1.086 |
+| Integridad SQLite | `ok` |
+
+También se verificó que una segunda importación no genera duplicados.
+
+## Ajustes realizados
+
+Durante las pruebas se detectaron y corrigieron dos casos:
+
+- duraciones `0` de TMDB se convierten a `NULL`;
+- los resultados de Discover se filtran por ID para evitar duplicados.
+
+Para cargas generales se evita importar episodios de forma masiva salvo que sea necesario.
+
+## Evidencias
+
+```text
+documentation/screenshots/fase4_01_conexion_tmdb.png
+documentation/screenshots/fase4_02_catalogo_importado.png
+```
+
+## Commit de cierre
+
+```text
+feat: integrate TMDB catalog import
+```
+
+**Estado: Fase 4 completada.**
 
 ---
 
