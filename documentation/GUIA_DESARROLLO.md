@@ -2,69 +2,51 @@
 
 ## 1. Introducción
 
-Este documento recoge paso a paso el proceso seguido durante el desarrollo del proyecto final de Python.
+Aplicación web privada para gestionar y hacer seguimiento de contenidos audiovisuales. Permitirá consultar películas y series, registrar contenido visto, guardar favoritos, valorar contenido, consultar progreso y visualizar estadísticas.
 
-El objetivo es documentar no solamente el resultado final de la aplicación, sino también las decisiones tomadas durante su diseño, las tecnologías utilizadas, la estructura del proyecto y los problemas encontrados durante el desarrollo.
-
-La aplicación consiste en una plataforma web privada para la gestión y seguimiento de contenidos audiovisuales. Permitirá consultar películas y series, registrar contenido visto, guardar favoritos, realizar valoraciones, consultar el progreso de series y visualizar estadísticas relacionadas con la actividad del usuario.
-
-El proyecto se desarrolla siguiendo los requisitos establecidos en la Propuesta B del Proyecto Final de Python.
+El proyecto se desarrolla a partir de la **Propuesta B del Proyecto Final de Python**.
 
 ---
 
 # Fase 1 — Preparación del proyecto
 
-## 1.1 Decisiones tecnológicas iniciales
+## 1.1 Objetivo
 
-Se decidió desarrollar una aplicación web utilizando Python y Flask.
+Preparar el entorno de desarrollo, definir la estructura inicial del proyecto y comprobar que Flask funciona correctamente.
 
-La base de datos utilizada será SQLite mediante el módulo `sqlite3` incluido en Python.
+## 1.2 Stack inicial
 
-Se decidió no utilizar un ORM como SQLAlchemy para mantener las consultas SQL visibles y facilitar tanto la comprensión como la explicación del funcionamiento de la base de datos.
+- **Python:** 3.10.10
+- **Framework:** Flask
+- **Base de datos:** SQLite mediante `sqlite3`
+- **Frontend:** HTML5, CSS3, JavaScript y Bootstrap
+- **Gráficas:** Chart.js
+- **Datos externos:** API de TMDB
+- **Control de versiones:** Git
 
-Las principales tecnologías previstas son:
+Se descarta el uso de ORM para trabajar con SQL directo y mantener el acceso a datos más transparente y fácil de explicar.
 
-- Python 3.10.10
-- Flask
-- SQLite
-- HTML5
-- CSS3
-- JavaScript
-- Bootstrap
-- Chart.js
-- API de TMDB
+## 1.3 Entorno virtual
 
-El proyecto utilizará Git como sistema de control de versiones.
-
----
-
-## 1.2 Creación del entorno virtual
-
-Se creó un entorno virtual de Python dentro de la carpeta del proyecto:
+Creación:
 
 ```powershell
 python -m venv .venv
 ```
 
-Posteriormente se activó mediante:
+Activación:
 
 ```powershell
 .venv\Scripts\activate
 ```
 
-Se verificó la versión de Python utilizada:
+Versión comprobada:
 
 ```text
 Python 3.10.10
 ```
 
-El objetivo del entorno virtual es aislar las dependencias utilizadas por el proyecto del resto de instalaciones de Python disponibles en el equipo.
-
----
-
-## 1.3 Estructura inicial del proyecto
-
-Se creó una primera estructura modular para separar las distintas responsabilidades de la aplicación:
+## 1.4 Estructura inicial
 
 ```text
 netflix-del-temu/
@@ -75,7 +57,9 @@ netflix-del-temu/
 │   ├── catalog.py
 │   ├── db.py
 │   ├── statistics.py
-│   └── tmdb_client.py
+│   ├── tmdb_client.py
+│   ├── static/
+│   └── templates/
 ├── database/
 │   └── schema.sql
 ├── documentation/
@@ -93,151 +77,127 @@ netflix-del-temu/
 └── run.py
 ```
 
-Dentro de `app` se reservaron módulos independientes para autenticación, administración, catálogo, estadísticas, acceso a la base de datos y comunicación con la API de TMDB.
+La estructura separa autenticación, administración, catálogo, estadísticas, acceso a datos y servicios externos.
 
-La carpeta `database` almacenará el esquema SQL utilizado para crear la base de datos.
+## 1.5 Git y archivos ignorados
 
-La carpeta `scripts` contendrá herramientas auxiliares, como el futuro proceso de importación de contenidos desde TMDB.
+Se inicializó Git y se estableció `main` como rama principal.
 
-La carpeta `documentation` almacenará la documentación producida durante el desarrollo, diagramas, capturas de pantalla y fuentes consultadas.
-
----
-
-## 1.4 Control de versiones
-
-Se inicializó un repositorio Git para mantener un historial de cambios del proyecto.
-
-La rama principal del repositorio se configuró con el nombre:
-
-```text
-main
-```
-
-También se creó un archivo `.gitignore` para evitar incluir en el repositorio archivos que no deben formar parte del código fuente, como:
-
-- El entorno virtual `.venv`.
-- El archivo `.env` con variables o secretos.
-- Archivos de caché de Python.
-- Bases de datos locales generadas durante el desarrollo.
-- Archivos temporales del sistema o del editor.
-
-La documentación del proyecto también se almacenará dentro del repositorio para que quede asociada a cada fase del desarrollo.
-
-El primer commit se realizará una vez revisada la estructura inicial:
+Primer commit:
 
 ```text
 chore: initialize project structure
 ```
 
-A partir de este punto se realizarán commits independientes cuando se complete una funcionalidad o una fase relevante del desarrollo.
+El archivo `.gitignore` excluye, entre otros:
 
----
+- `.venv/`
+- `.env`
+- cachés de Python
+- bases de datos locales
+- archivos temporales del editor o del sistema
 
-## 1.5 Estrategia de trabajo por fases
+## 1.6 Esqueleto Flask
 
-El proyecto se desarrollará de forma incremental.
+Se configuró `create_app()` en `app/__init__.py` y `run.py` como punto de entrada.
 
-Cada fase seguirá siempre el mismo proceso:
+La variable `SECRET_KEY` se carga desde `.env`, mientras que `.env.example` sirve como plantilla de configuración.
 
-1. Diseñar lo que se va a realizar.
-2. Implementar la funcionalidad.
-3. Probar manualmente que funciona correctamente.
-4. Corregir los errores encontrados.
-5. Realizar las capturas necesarias.
-6. Actualizar esta guía de desarrollo.
-7. Revisar la fase completa.
-8. Crear el commit correspondiente.
-9. Pasar a la siguiente fase.
+También se creó una landing inicial con:
 
-Este sistema permite mantener sincronizados el código, las pruebas realizadas, las capturas y la documentación.
+- mensaje principal;
+- descripción de la aplicación;
+- botón **Crear una cuenta**;
+- botón **Iniciar sesión**;
+- aviso de registro obligatorio para acceder al catálogo.
 
----
-
-## 1.6 Fuentes y documentación técnica
-
-Durante el desarrollo se guardarán las fuentes oficiales utilizadas para justificar decisiones técnicas y facilitar posteriormente la elaboración de la memoria y la bibliografía.
-
-Las referencias se almacenarán dentro de:
+Archivos principales:
 
 ```text
-documentation/sources/
+app/templates/index.html
+app/static/css/style.css
 ```
 
-Las fuentes principales previstas inicialmente son:
+El diseño inicial utiliza una paleta oscura azulada con acento violeta.
 
-### Flask
+## 1.7 Verificación
 
-Documentación oficial:
+Ejecución:
 
-https://flask.palletsprojects.com/
+```powershell
+python run.py
+```
 
-Uso previsto en el proyecto:
+Resultado:
 
-Framework principal utilizado para desarrollar la aplicación web.
+```text
+* Serving Flask app 'app'
+* Debug mode: on
+* Running on http://127.0.0.1:5000
+```
 
-### Python — sqlite3
+Comprobaciones realizadas:
 
-Documentación oficial:
+| Prueba | Resultado |
+|---|---|
+| Acceso a `/` | Correcto — HTTP 200 |
+| Carga de CSS | Correcta |
+| Ruta `/prueba` | HTTP 404 esperado |
+| `/favicon.ico` | HTTP 404 esperado en esta fase |
 
-https://docs.python.org/3/library/sqlite3.html
+La aplicación quedó correctamente operativa en entorno de desarrollo.
 
-Uso previsto en el proyecto:
+## 1.8 Evidencia
 
-Acceso y gestión de la base de datos SQLite mediante consultas SQL directas.
+Captura guardada en:
 
-### TMDB API
+```text
+documentation/screenshots/fase1_01_flask_funcionando.png
+```
 
-Documentación oficial:
+La imagen demuestra la carga correcta de la landing y del diseño CSS.
 
-https://developer.themoviedb.org/
+## 1.9 Flujo de trabajo
 
-Uso previsto en el proyecto:
+Cada fase seguirá este proceso:
 
-Obtención de metadatos de películas, series, temporadas, episodios e imágenes.
+1. Diseñar.
+2. Implementar.
+3. Probar.
+4. Corregir.
+5. Capturar evidencias.
+6. Documentar.
+7. Revisar.
+8. Crear commit.
+9. Pasar a la siguiente fase.
 
-### Bootstrap
+## 1.10 Fuentes técnicas iniciales
 
-Documentación oficial:
+- Flask: https://flask.palletsprojects.com/
+- Python `sqlite3`: https://docs.python.org/3/library/sqlite3.html
+- TMDB API: https://developer.themoviedb.org/
+- Bootstrap: https://getbootstrap.com/
+- Chart.js: https://www.chartjs.org/
 
-https://getbootstrap.com/
+## 1.11 Estado de la fase
 
-Uso previsto en el proyecto:
+**Fase 1 completada.**
 
-Base para componentes visuales y diseño responsive.
+Se dispone de:
 
-### Chart.js
+- entorno virtual operativo;
+- estructura inicial del proyecto;
+- Git configurado;
+- Flask funcionando;
+- landing inicial;
+- estilos básicos;
+- primera evidencia gráfica;
+- documentación inicial.
 
-Documentación oficial:
+### Commit de cierre previsto
 
-https://www.chartjs.org/
+```text
+feat: create Flask application skeleton
+```
 
-Uso previsto en el proyecto:
-
-Representación gráfica de estadísticas del usuario y del administrador.
-
----
-
-## 1.7 Estado actual de la Fase 1
-
-Actualmente se ha completado:
-
-- Creación de la carpeta del proyecto.
-- Creación y activación del entorno virtual.
-- Verificación de Python 3.10.10.
-- Creación de la estructura inicial de carpetas y archivos.
-- Inicialización del repositorio Git.
-- Cambio de la rama principal a `main`.
-- Creación del archivo `.gitignore`.
-- Creación de la estructura inicial de documentación.
-
-Antes de cerrar la Fase 1 todavía será necesario:
-
-- Verificar y documentar las dependencias iniciales instaladas.
-- Completar la configuración mínima de Flask.
-- Crear una página mínima de prueba.
-- Ejecutar la aplicación y comprobar que responde correctamente.
-- Realizar una captura de la primera ejecución funcional.
-- Revisar esta documentación.
-- Crear los commits correspondientes.
-
-La Fase 1 no se considerará terminada hasta completar y verificar estos puntos.
+La siguiente fase será el **diseño del modelo de datos y la creación del esquema SQL**.
