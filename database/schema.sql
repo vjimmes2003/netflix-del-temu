@@ -22,6 +22,11 @@ CREATE TABLE IF NOT EXISTS users (
     profile_public INTEGER NOT NULL DEFAULT 0
         CHECK (profile_public IN (0, 1)),
 
+    mature_content_enabled INTEGER NOT NULL DEFAULT 0
+        CHECK (mature_content_enabled IN (0, 1)),
+
+    mature_content_confirmed_at TEXT,
+
     is_active INTEGER NOT NULL DEFAULT 1
         CHECK (is_active IN (0, 1)),
 
@@ -76,6 +81,19 @@ CREATE TABLE IF NOT EXISTS media (
 
     source TEXT NOT NULL DEFAULT 'manual'
         CHECK (source IN ('manual', 'tmdb')),
+
+    content_level TEXT NOT NULL DEFAULT 'general'
+        CHECK (
+            content_level IN (
+                'general',
+                'mature',
+                'explicit'
+            )
+        ),
+
+    content_reason TEXT,
+    certification TEXT,
+    certification_country TEXT,
 
     is_visible INTEGER NOT NULL DEFAULT 1
         CHECK (is_visible IN (0, 1)),
@@ -431,6 +449,7 @@ CREATE INDEX IF NOT EXISTS idx_media_countries_country
 
 CREATE INDEX IF NOT EXISTS idx_media_tags_tag
     ON media_tags(tag_id);
+
 CREATE INDEX IF NOT EXISTS idx_users_role_active
     ON users(role, is_active);
 
@@ -451,3 +470,6 @@ CREATE INDEX IF NOT EXISTS idx_season_ratings_season
 
 CREATE INDEX IF NOT EXISTS idx_episode_ratings_episode
     ON episode_ratings(episode_id);
+
+CREATE INDEX IF NOT EXISTS idx_media_content_visibility
+    ON media(media_type, is_visible, content_level);

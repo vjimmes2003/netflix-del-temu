@@ -1,7 +1,9 @@
 import os
+from datetime import datetime
 
 from dotenv import load_dotenv
 from flask import Flask, render_template
+
 
 
 def create_app():
@@ -47,6 +49,34 @@ def create_app():
     @app.route("/")
     def index():
         return render_template("index.html")
+
+    @app.template_filter("tmdb_image")
+    def tmdb_image(path, size="w500"):
+        if not path:
+            return None
+
+        return (
+            "https://image.tmdb.org/t/p/"
+            f"{size}{path}"
+        )
+
+    @app.template_filter("date_es")
+    def date_es(value):
+        if not value:
+            return "Sin fecha"
+
+        try:
+            date = datetime.strptime(
+                value,
+                "%Y-%m-%d",
+            )
+
+            return date.strftime(
+                "%d/%m/%Y"
+            )
+
+        except ValueError:
+            return value
 
     @app.errorhandler(401)
     def unauthorized(error):

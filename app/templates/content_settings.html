@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}
+Contenido maduro — Netflix del Temu
+{% endblock %}
+
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/content_controls.css'
+    ) }}"
+>
+
+<main class="content-settings-page">
+
+    <section class="content-settings-card">
+
+        <a
+            href="{{ url_for(
+                'catalog.catalog'
+            ) }}"
+            class="settings-back-link"
+        >
+            ← Volver al catálogo
+        </a>
+
+
+        <p class="eyebrow">
+            PREFERENCIA DE CONTENIDO
+        </p>
+
+        <h1>
+            Contenido maduro
+        </h1>
+
+
+        {% with messages = get_flashed_messages(
+            with_categories=true
+        ) %}
+
+            {% if messages %}
+
+                <div class="settings-messages">
+
+                    {% for category, message in messages %}
+
+                        <div
+                            class="settings-message
+                            settings-message-{{ category }}"
+                        >
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        {% endwith %}
+
+
+        {% if mature_content_confirmed %}
+
+            <div class="verification-complete">
+
+                <div class="verification-icon">
+                    ✓
+                </div>
+
+                <div>
+
+                    <h2>
+                        Confirmación realizada
+                    </h2>
+
+                    <p>
+                        Ya puedes mostrar u ocultar
+                        contenido maduro directamente
+                        desde el catálogo mediante el
+                        control rápido.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <a
+                href="{{ url_for(
+                    'catalog.catalog'
+                ) }}"
+                class="settings-button
+                       settings-button-primary
+                       settings-button-link"
+            >
+                Ir al catálogo
+            </a>
+
+
+        {% else %}
+
+            <p class="settings-intro">
+                Esta confirmación solo se realiza una vez.
+                Después podrás activar o desactivar este
+                contenido directamente desde el catálogo.
+            </p>
+
+
+            <div class="mature-explanation">
+
+                <strong>
+                    ¿Qué se considera contenido maduro?
+                </strong>
+
+                <p>
+                    Contenido clasificado como 18+,
+                    TV-MA, NC-17 o con determinadas
+                    temáticas para adultos.
+                </p>
+
+                <p>
+                    El contenido clasificado como
+                    explícito permanece bloqueado
+                    siempre.
+                </p>
+
+            </div>
+
+
+            <form
+                method="post"
+                class="mature-enable-form"
+            >
+
+                <input
+                    type="hidden"
+                    name="action"
+                    value="confirm"
+                >
+
+
+                <label class="adult-confirmation">
+
+                    <input
+                        type="checkbox"
+                        name="confirm_adult"
+                        required
+                    >
+
+                    <span>
+                        Confirmo que soy mayor de
+                        18 años.
+                    </span>
+
+                </label>
+
+
+                <label class="settings-field">
+
+                    <span>
+                        Contraseña actual
+                    </span>
+
+                    <input
+                        type="password"
+                        name="password"
+                        required
+                        autocomplete="current-password"
+                        placeholder="Introduce tu contraseña"
+                    >
+
+                </label>
+
+
+                <p class="settings-security-note">
+                    La contraseña se utiliza únicamente
+                    para confirmar esta preferencia.
+                </p>
+
+
+                <button
+                    type="submit"
+                    class="settings-button
+                           settings-button-primary"
+                >
+                    Confirmar y activar
+                </button>
+
+            </form>
+
+        {% endif %}
+
+    </section>
+
+</main>
+
+{% endblock %}

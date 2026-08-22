@@ -1,92 +1,74 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>{% block title %}Netflix del Temu{% endblock %}</title>
 
     <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}"
-    >
-</head>
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
 
-<body>
-
+  <body>
     <header class="site-header">
+      <a href="{{ url_for('index') }}" class="brand"> Netflix del Temu </a>
 
-        <a href="{{ url_for('index') }}" class="brand">
-            Netflix del Temu
+      <nav class="nav">
+        {% if current_user.is_authenticated %}
+
+        <a
+          href="{{ url_for(
+        'catalog.catalog',
+        type='movie'
+    ) }}"
+        >
+          Películas
         </a>
 
-        <nav class="nav">
+        <a
+          href="{{ url_for(
+        'catalog.catalog',
+        type='series'
+    ) }}"
+        >
+          Series
+        </a>
 
-            {% if current_user.is_authenticated %}
-
-                <a href="{{ url_for('catalog.catalog') }}">
-                    Catálogo
-                </a>
-
-                {% if current_user.role == "admin" %}
-                    <a href="{{ url_for('admin.dashboard') }}">
-                        Administración
-                    </a>
-                {% endif %}
-
-                <span class="user-name">
-                    {{ current_user.display_name }}
-                </span>
-
-                <form
-                    method="post"
-                    action="{{ url_for('auth.logout') }}"
-                    class="logout-form"
-                >
-                    <button type="submit" class="nav-button">
-                        Cerrar sesión
-                    </button>
-                </form>
-
-            {% else %}
-
-                <a href="{{ url_for('auth.login') }}">
-                    Iniciar sesión
-                </a>
-
-                <a href="{{ url_for('auth.register') }}">
-                    Crear cuenta
-                </a>
-
-            {% endif %}
-
-        </nav>
-
-    </header>
-
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-
-        {% if messages %}
-            <div class="flash-container">
-
-                {% for category, message in messages %}
-                    <div class="flash flash-{{ category }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-
-            </div>
+        {% if current_user.role == "admin" %}
+        <a href="{{ url_for('admin.dashboard') }}"> Administración </a>
         {% endif %}
 
-    {% endwith %}
+        <span class="user-name"> {{ current_user.display_name }} </span>
 
+        <form
+          method="post"
+          action="{{ url_for('auth.logout') }}"
+          class="logout-form"
+        >
+          <button type="submit" class="nav-button">Cerrar sesión</button>
+        </form>
 
-    {% block content %}{% endblock %}
+        {% else %}
 
-</body>
+        <a href="{{ url_for('auth.login') }}"> Iniciar sesión </a>
+
+        <a href="{{ url_for('auth.register') }}"> Crear cuenta </a>
+
+        {% endif %}
+      </nav>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div class="flash-container">
+      {% for category, message in messages %}
+      <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %} {% block content %}{% endblock %}
+  </body>
 </html>

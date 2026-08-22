@@ -7,29 +7,313 @@ Catálogo — Netflix del Temu
 
 {% block content %}
 
-<main class="page-shell">
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/content_controls.css'
+    ) }}"
+>
 
-    <section class="panel">
+<main class="catalog-page">
 
-        <p class="eyebrow">
-            ÁREA PRIVADA
-        </p>
+    <section class="catalog-header">
 
-        <h1 class="page-title">
-            Hola, {{ current_user.display_name }}
-        </h1>
+        <div>
 
-        <p class="description">
-            Has iniciado sesión correctamente.
-            El catálogo audiovisual se implementará
-            en una fase posterior.
-        </p>
+            <p class="eyebrow">
+                CATÁLOGO AUDIOVISUAL
+            </p>
 
-        <p class="role-badge">
-            Rol: {{ current_user.role }}
-        </p>
+            <h1 class="catalog-title">
+
+                {% if media_type == "movie" %}
+                    Películas
+                {% else %}
+                    Series
+                {% endif %}
+
+            </h1>
+
+            <p class="catalog-count">
+                {{ total_items }} contenidos disponibles
+            </p>
+
+        </div>
+
+
+        <div class="catalog-actions">
+
+            <nav class="catalog-tabs">
+
+                <a
+                    href="{{ url_for(
+                        'catalog.catalog',
+                        type='movie'
+                    ) }}"
+                    class="catalog-tab
+                    {% if media_type == 'movie' %}
+                        active
+                    {% endif %}"
+                >
+                    Películas
+                </a>
+
+                <a
+                    href="{{ url_for(
+                        'catalog.catalog',
+                        type='series'
+                    ) }}"
+                    class="catalog-tab
+                    {% if media_type == 'series' %}
+                        active
+                    {% endif %}"
+                >
+                    Series
+                </a>
+
+            </nav>
+
+
+            {% if mature_content_confirmed %}
+
+                <form
+                    method="post"
+                    action="{{ url_for(
+                        'catalog.toggle_mature_content'
+                    ) }}"
+                    class="mature-quick-control"
+                >
+
+                    <input
+                        type="hidden"
+                        name="media_type"
+                        value="{{ media_type }}"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="enabled"
+                        value="{{
+                            0
+                            if mature_content_enabled
+                            else 1
+                        }}"
+                    >
+
+                    <div class="mature-switch-copy">
+
+                        <span>
+                            Contenido maduro
+                        </span>
+
+                        <small>
+                            {% if mature_content_enabled %}
+                                Visible
+                            {% else %}
+                                Oculto
+                            {% endif %}
+                        </small>
+
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="mature-switch-button
+                        {% if mature_content_enabled %}
+                            active
+                        {% endif %}"
+                        aria-label="
+                            {% if mature_content_enabled %}
+                                Ocultar contenido maduro
+                            {% else %}
+                                Mostrar contenido maduro
+                            {% endif %}
+                        "
+                        title="
+                            {% if mature_content_enabled %}
+                                Ocultar contenido maduro
+                            {% else %}
+                                Mostrar contenido maduro
+                            {% endif %}
+                        "
+                    >
+                        <span></span>
+                    </button>
+
+                </form>
+
+            {% else %}
+
+                <a
+                    href="{{ url_for(
+                        'catalog.content_settings'
+                    ) }}"
+                    class="mature-first-setup"
+                >
+                    <span>
+                        Contenido maduro
+                    </span>
+
+                    <small>
+                        Configurar
+                    </small>
+                </a>
+
+            {% endif %}
+
+        </div>
 
     </section>
+
+
+    {% if media_items %}
+
+        <section class="media-grid">
+
+            {% for item in media_items %}
+
+                <a
+                    href="{{ url_for(
+                        'catalog.media_detail',
+                        media_id=item['id']
+                    ) }}"
+                    class="media-card"
+                >
+
+                    <div class="media-poster">
+
+                        {% if item["poster_path"] %}
+
+                            <img
+                                src="{{ item['poster_path']
+                                    | tmdb_image('w500') }}"
+                                alt="Portada de {{ item['title'] }}"
+                                loading="lazy"
+                            >
+
+                        {% else %}
+
+                            <div class="poster-placeholder">
+                                Sin portada
+                            </div>
+
+                        {% endif %}
+
+
+                        {% if item["content_level"] == "mature" %}
+
+                            <span class="mature-card-badge">
+
+                                MADURO
+
+                                {% if item["certification"] %}
+                                    · {{ item["certification"] }}
+                                {% endif %}
+
+                            </span>
+
+                        {% endif %}
+
+
+                        {% if item["tmdb_rating"] %}
+
+                            <span class="rating-badge">
+                                ★
+                                {{
+                                    "%.1f"
+                                    | format(item["tmdb_rating"])
+                                }}
+                            </span>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="media-card-info">
+
+                        <h2>
+                            {{ item["title"] }}
+                        </h2>
+
+                        <p>
+                            {% if item["release_year"] %}
+                                {{ item["release_year"] }}
+                            {% else %}
+                                Año desconocido
+                            {% endif %}
+                        </p>
+
+                    </div>
+
+                </a>
+
+            {% endfor %}
+
+        </section>
+
+
+        {% if total_pages > 1 %}
+
+            <nav class="pagination">
+
+                {% if page > 1 %}
+
+                    <a
+                        href="{{ url_for(
+                            'catalog.catalog',
+                            type=media_type,
+                            page=page - 1
+                        ) }}"
+                        class="pagination-button"
+                    >
+                        ← Anterior
+                    </a>
+
+                {% endif %}
+
+
+                <span class="pagination-current">
+                    Página {{ page }} de {{ total_pages }}
+                </span>
+
+
+                {% if page < total_pages %}
+
+                    <a
+                        href="{{ url_for(
+                            'catalog.catalog',
+                            type=media_type,
+                            page=page + 1
+                        ) }}"
+                        class="pagination-button"
+                    >
+                        Siguiente →
+                    </a>
+
+                {% endif %}
+
+            </nav>
+
+        {% endif %}
+
+    {% else %}
+
+        <section class="empty-state">
+
+            <h2>
+                No hay contenido disponible
+            </h2>
+
+            <p>
+                No hay contenidos visibles con las
+                preferencias actuales.
+            </p>
+
+        </section>
+
+    {% endif %}
 
 </main>
 

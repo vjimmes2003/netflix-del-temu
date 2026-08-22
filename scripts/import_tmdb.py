@@ -23,6 +23,99 @@ load_dotenv(PROJECT_ROOT / ".env")
 
 from app.tmdb_client import TMDBClient
 
+EXPLICIT_KEYWORDS = {
+    "hentai",
+    "ecchi",
+    "pornography",
+    "pornographic",
+    "softcore",
+    "hardcore",
+    "sexploitation",
+    "adult animation",
+}
+
+def is_explicit_content(data, media_type):
+    """Detecta contenido claramente explícito."""
+
+    if data.get("adult") is True:
+        return True
+
+    keywords = extract_keywords(
+        data,
+        media_type,
+    )
+
+    keyword_names = {
+        keyword.get("name", "")
+        .strip()
+        .casefold()
+        for keyword in keywords
+    }
+
+    return any(
+        blocked in keyword_names
+        for blocked in EXPLICIT_KEYWORDS
+    )
+
+def apply_title_fallback(
+    client,
+    data,
+    media_type,
+):
+    """Busca un título inglés si TMDB no tiene traducción española."""
+
+    if media_type == "movie":
+        title_key = "title"
+        original_key = "original_title"
+    else:
+        title_key = "name"
+        original_key = "original_name"
+
+    title = data.get(title_key)
+    original_title = data.get(original_key)
+    original_language = data.get(
+        "original_language"
+    )
+
+    # Español o inglés: no hace falta fallback.
+    if original_language in ("es", "en"):
+        return data
+
+    # TMDB ya nos ha devuelto una traducción española.
+    if title and title != original_title:
+        return data
+
+    if media_type == "movie":
+        english_data = client.movie_details(
+            data["id"],
+            language="en-US",
+        )
+    else:
+        english_data = client.series_details(
+            data["id"],
+            language="en-US",
+        )
+
+    english_title = english_data.get(
+        title_key
+    )
+
+    if (
+        english_title
+        and english_title
+        != english_data.get(original_key)
+    ):
+        data[title_key] = english_title
+
+        if not data.get("overview"):
+            data["overview"] = (
+                english_data.get("overview")
+            )
+
+        return data
+
+    return None
+
 
 def get_connection():
     """Abre una conexión con la base de datos."""
@@ -417,6 +510,30 @@ def import_movie(client, db, tmdb_id):
     """Importa una película completa."""
 
     data = client.movie_details(tmdb_id)
+    
+    if is_explicit_content(
+        data,
+        "movie",
+    ):
+        print(
+            f"[SKIP] Película {tmdb_id}: "
+            "contenido explícito"
+        )
+        return
+
+
+    data = apply_title_fallback(
+        client,
+        data,
+        "movie",
+    )
+
+    if data is None:
+        print(
+            f"[SKIP] Película {tmdb_id}: "
+            "sin título español o inglés"
+        )
+        return
 
     media_id = upsert_media(
         db,
@@ -458,6 +575,30 @@ def import_series(
     """Importa una serie y opcionalmente sus episodios."""
 
     data = client.series_details(tmdb_id)
+    
+    if is_explicit_content(
+        data,
+        "series",
+    ):
+        print(
+            f"[SKIP] Serie {tmdb_id}: "
+            "contenido explícito"
+        )
+        return
+
+
+    data = apply_title_fallback(
+        client,
+        data,
+        "series",
+    )
+
+    if data is None:
+        print(
+            f"[SKIP] Serie {tmdb_id}: "
+            "sin título español o inglés"
+        )
+        return
 
     media_id = upsert_media(
         db,

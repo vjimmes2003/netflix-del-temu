@@ -47,28 +47,38 @@ class TMDBClient:
 
         return response.json()
 
-    def movie_details(self, tmdb_id):
+    def movie_details(self, tmdb_id, language=None):
         """Obtiene los datos completos de una película."""
+
+        params = {
+            "append_to_response": "keywords,release_dates",
+        }
+
+        if language:
+            params["language"] = language
 
         return self._get(
             f"/movie/{tmdb_id}",
-            {
-                "append_to_response": "keywords",
-            },
+            params,
         )
 
-    def series_details(self, tmdb_id):
+    def series_details(self, tmdb_id, language=None):
         """Obtiene los datos completos de una serie."""
+
+        params = {
+            "append_to_response": "keywords,content_ratings",
+        }
+
+        if language:
+            params["language"] = language
 
         return self._get(
             f"/tv/{tmdb_id}",
-            {
-                "append_to_response": "keywords",
-            },
+            params,
         )
 
     def season_details(self, series_id, season_number):
-        """Obtiene temporadas y episodios de una serie."""
+        """Obtiene los datos y episodios de una temporada."""
 
         return self._get(
             f"/tv/{series_id}/season/{season_number}"
