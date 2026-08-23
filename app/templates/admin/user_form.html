@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ page_title }} — Administración
+{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/admin_users.css'
+    ) }}"
+>
+
+<main class="admin-page">
+
+    <section class="admin-form-shell">
+
+        <a
+            href="{{ url_for(
+                'admin.users'
+            ) }}"
+            class="admin-back-link"
+        >
+            ← Volver a usuarios
+        </a>
+
+        <p class="eyebrow">
+            ADMINISTRACIÓN
+        </p>
+
+        <h1>
+            {{ page_title }}
+        </h1>
+
+        {% if form_mode == "create" %}
+            <p>
+                La cuenta se creará como cliente
+                y estará activa desde el principio.
+            </p>
+        {% else %}
+            <p>
+                La contraseña puede dejarse vacía
+                para mantener la actual.
+            </p>
+        {% endif %}
+
+
+        {% with messages = get_flashed_messages(
+            with_categories=true
+        ) %}
+
+            {% if messages %}
+
+                <div class="admin-messages">
+
+                    {% for category, message in messages %}
+
+                        <div
+                            class="admin-message
+                            admin-message-{{ category }}"
+                        >
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        {% endwith %}
+
+
+        <form
+            method="post"
+            class="admin-user-form"
+        >
+
+            <div class="admin-form-grid">
+
+                <label class="admin-field">
+                    <span>Usuario</span>
+
+                    <input
+                        type="text"
+                        name="username"
+                        value="{{ form_data['username'] }}"
+                        minlength="3"
+                        maxlength="50"
+                        required
+                    >
+
+                    <small>
+                        Entre 3 y 50 caracteres,
+                        sin espacios.
+                    </small>
+                </label>
+
+
+                <label class="admin-field">
+                    <span>Correo electrónico</span>
+
+                    <input
+                        type="email"
+                        name="email"
+                        value="{{ form_data['email'] }}"
+                        required
+                    >
+                </label>
+
+
+                <label class="admin-field">
+                    <span>Nombre visible</span>
+
+                    <input
+                        type="text"
+                        name="display_name"
+                        value="{{ form_data['display_name'] }}"
+                        maxlength="100"
+                        required
+                    >
+                </label>
+
+
+                <label class="admin-field">
+                    <span>País</span>
+
+                    <input
+                        type="text"
+                        name="country_code"
+                        value="{{ form_data['country_code'] }}"
+                        minlength="2"
+                        maxlength="2"
+                        required
+                    >
+
+                    <small>
+                        Código de dos letras,
+                        por ejemplo ES.
+                    </small>
+                </label>
+
+
+                <label
+                    class="admin-field
+                           admin-field-wide"
+                >
+                    <span>
+                        {% if form_mode == "create" %}
+                            Contraseña
+                        {% else %}
+                            Nueva contraseña
+                        {% endif %}
+                    </span>
+
+                    <input
+                        type="password"
+                        name="password"
+                        minlength="8"
+                        {% if form_mode == "create" %}
+                            required
+                        {% endif %}
+                        autocomplete="new-password"
+                    >
+
+                    <small>
+                        Mínimo 8 caracteres.
+                        {% if form_mode == "edit" %}
+                            Déjala vacía si no quieres cambiarla.
+                        {% endif %}
+                    </small>
+                </label>
+
+            </div>
+
+
+            {% if form_mode == "edit" and user %}
+
+                <div class="admin-edit-state">
+                    <span>
+                        Estado actual:
+                    </span>
+
+                    {% if user["is_active"] %}
+                        <strong class="active">
+                            Activo
+                        </strong>
+                    {% else %}
+                        <strong class="inactive">
+                            Inactivo
+                        </strong>
+                    {% endif %}
+                </div>
+
+            {% endif %}
+
+
+            <div class="admin-form-actions">
+
+                <button
+                    type="submit"
+                    class="admin-primary-button"
+                >
+                    {% if form_mode == "create" %}
+                        Crear cliente
+                    {% else %}
+                        Guardar cambios
+                    {% endif %}
+                </button>
+
+                <a
+                    href="{{ url_for(
+                        'admin.users'
+                    ) }}"
+                    class="admin-secondary-link"
+                >
+                    Cancelar
+                </a>
+
+            </div>
+
+        </form>
+
+    </section>
+
+</main>
+
+{% endblock %}

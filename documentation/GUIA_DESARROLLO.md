@@ -497,6 +497,97 @@ feat: add favorites watched tracking and series progress
 
 ---
 
+# Fase 8 — Administración de usuarios
+
+## Objetivo
+Implementar la gestión de cuentas de cliente desde el área administrativa.
+
+## Implementación
+Se amplió `/admin/` con contadores de clientes, películas y series.
+
+La ruta `/admin/users` muestra usuario, correo, país, rol, estado y fecha de alta.
+
+El administrador puede:
+```text
+Crear cliente
+Editar cliente
+Desactivar cliente
+Reactivar cliente
+```
+
+Las cuentas `admin` aparecen protegidas y no pueden modificarse desde este CRUD.
+
+## Creación y edición
+La creación permite definir usuario, correo, nombre visible, país y contraseña.
+
+Las cuentas nuevas reciben:
+```text
+role = client
+is_active = 1
+```
+
+En edición la contraseña es opcional; si queda vacía se mantiene la existente.
+
+Se validan correo, longitud mínima de contraseña y duplicados de usuario/correo.
+
+## Suspensión de cuentas
+No se utiliza `DELETE` sobre usuarios.
+
+La desactivación usa `is_active = 0` y la reactivación `is_active = 1`.
+
+Así se conservan favoritos, historial y progreso.
+
+## Login de usuario suspendido
+Una cuenta suspendida no puede iniciar sesión.
+
+Con credenciales correctas se informa de la suspensión y se muestra:
+```text
+soporte@netflixdeltemu.test
+```
+
+El correo puede configurarse mediante `SUPPORT_EMAIL`.
+
+Si la contraseña es incorrecta se mantiene el mensaje genérico de credenciales para no revelar el estado de la cuenta.
+
+## Archivos principales
+```text
+app/admin.py
+app/auth.py
+app/templates/admin/dashboard.html
+app/templates/admin/users.html
+app/templates/admin/user_form.html
+app/static/css/admin_users.css
+```
+
+## Evidencias
+```text
+documentation/screenshots/fase8_01_panel_admin.png
+documentation/screenshots/fase8_02_lista_usuarios.png
+documentation/screenshots/fase8_03_crear_cliente.png
+documentation/screenshots/fase8_04_editar_cliente.png
+documentation/screenshots/fase8_05_cliente_inactivo.png
+documentation/screenshots/fase8_06_login_usuario_baneado.png
+```
+
+## Validación
+- acceso restringido a administradores;
+- creación y edición correctas;
+- administradores protegidos;
+- desactivación/reactivación funcional;
+- datos conservados tras suspender;
+- login bloqueado al usuario suspendido;
+- aviso de soporte solo con contraseña correcta;
+- login restaurado tras reactivar.
+
+## Commit
+```text
+feat: add admin user management and account suspension
+```
+
+**Estado: completada.**
+
+---
+
 # Fuentes técnicas
 
 - Flask: https://flask.palletsprojects.com/

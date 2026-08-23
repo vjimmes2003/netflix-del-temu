@@ -1,8 +1,12 @@
+import os
+import re
 import sqlite3
+from functools import wraps
 
 import click
 from flask import (
     Blueprint,
+    abort,
     flash,
     redirect,
     render_template,
@@ -14,41 +18,118 @@ from flask_login import (
     LoginManager,
     UserMixin,
     current_user,
+    login_required,
     login_user,
     logout_user,
 )
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import (
+    check_password_hash,
+    generate_password_hash,
+)
 
 from .db import get_db
 
 
-auth_bp = Blueprint("auth", __name__)
+auth_bp = Blueprint(
+    "auth",
+    __name__,
+    url_prefix="/auth",
+)
 
 login_manager = LoginManager()
-login_manager.login_view = "auth.login"
-login_manager.login_message = "Debes iniciar sesión para acceder."
-login_manager.login_message_category = "info"
+
+EMAIL_PATTERN = re.compile(
+    r"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+)
+
+USERNAME_MIN_LENGTH = 3
+USERNAME_MAX_LENGTH = 50
+PASSWORD_MIN_LENGTH = 8
+
+DEFAULT_SUPPORT_EMAIL = (
+    "soporte@netflixdeltemu.test"
+)
 
 
 class User(UserMixin):
-    """Representa al usuario autenticado de la aplicación."""
+    """Representa al usuario autenticado."""
 
-    def __init__(self, row):
-        self.id = row["id"]
-        self.username = row["username"]
-        self.email = row["email"]
-        self.display_name = row["display_name"]
-        self.role = row["role"]
-        self._is_active = bool(row["is_active"])
+    def __init__(
+        self,
+        user_id,
+        username,
+        email,
+        display_name,
+        role,
+        is_active,
+    ):
+        self.id = user_id
+        self.username = username
+        self.email = email
+        self.display_name = display_name
+        self.role = role
+        self._is_active = bool(
+            is_active
+        )
 
     @property
     def is_active(self):
+        """Indica si la cuenta puede iniciar sesión."""
+
         return self._is_active
+
+
+def get_support_email():
+    """
+    Devuelve el correo de soporte.
+
+    Puede configurarse mediante la variable:
+    SUPPORT_EMAIL
+    """
+
+    return os.getenv(
+        "SUPPORT_EMAIL",
+        DEFAULT_SUPPORT_EMAIL,
+    ).strip()
+
+
+def row_to_user(row):
+    """Convierte una fila SQLite en un objeto User."""
+
+    if row is None:
+        return None
+
+    return User(
+        user_id=row["id"],
+        username=row["username"],
+        email=row["email"],
+        display_name=row["display_name"],
+        role=row["role"],
+        is_active=row["is_active"],
+    )
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    row = get_db().execute(
+    """
+    Recupera al usuario de la sesión.
+
+    Solo devuelve cuentas activas. Si un administrador
+    suspende una cuenta que estaba conectada, Flask-Login
+    dejará de considerarla autenticada en la siguiente
+    carga de sesión.
+    """
+
+    try:
+        user_id = int(
+            user_id
+        )
+    except (TypeError, ValueError):
+        return None
+
+    db = get_db()
+
+    row = db.execute(
         """
         SELECT
             id,
@@ -64,123 +145,95 @@ def load_user(user_id):
         (user_id,),
     ).fetchone()
 
-    if row is None:
-        return None
+    return row_to_user(
+        row
+    )
 
-    return User(row)
+
+def admin_required(view):
+    """Restringe una ruta a administradores."""
+
+    @wraps(view)
+    @login_required
+    def wrapped_view(*args, **kwargs):
+        if getattr(
+            current_user,
+            "role",
+            None,
+        ) != "admin":
+            abort(403)
+
+        return view(
+            *args,
+            **kwargs,
+        )
+
+    return wrapped_view
 
 
-@auth_bp.route("/register", methods=("GET", "POST"))
-def register():
+def get_login_identifier():
+    """
+    Obtiene el usuario/correo del formulario.
+
+    Se admiten varios nombres por compatibilidad con
+    versiones anteriores de la plantilla.
+    """
+
+    return (
+        request.form.get(
+            "identifier"
+        )
+        or request.form.get(
+            "identity"
+        )
+        or request.form.get(
+            "username"
+        )
+        or request.form.get(
+            "email"
+        )
+        or ""
+    ).strip()
+
+
+@auth_bp.route(
+    "/login",
+    methods=("GET", "POST"),
+)
+def login():
+    """Inicia sesión mediante usuario o correo."""
+
     if current_user.is_authenticated:
-        return redirect(url_for("catalog.catalog"))
+        if getattr(
+            current_user,
+            "role",
+            None,
+        ) == "admin":
+            return redirect(
+                url_for(
+                    "admin.dashboard"
+                )
+            )
+
+        return redirect(
+            url_for(
+                "catalog.catalog"
+            )
+        )
 
     if request.method == "POST":
-        username = request.form.get("username", "").strip()
-        display_name = request.form.get("display_name", "").strip()
-        email = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "")
-        password_confirmation = request.form.get(
-            "password_confirmation",
+        identifier = (
+            get_login_identifier()
+        )
+
+        password = request.form.get(
+            "password",
             "",
         )
 
-        error = None
-
-        if len(username) < 3:
-            error = "El nombre de usuario debe tener al menos 3 caracteres."
-
-        elif not email or "@" not in email:
-            error = "Introduce un correo electrónico válido."
-
-        elif len(password) < 8:
-            error = "La contraseña debe tener al menos 8 caracteres."
-
-        elif password != password_confirmation:
-            error = "Las contraseñas no coinciden."
-
-        if not display_name:
-            display_name = username
-
         db = get_db()
 
-        if error is None:
-            existing_user = db.execute(
-                """
-                SELECT id
-                FROM users
-                WHERE username = ?
-                   OR email = ?
-                """,
-                (username, email),
-            ).fetchone()
-
-            if existing_user is not None:
-                error = "El usuario o correo electrónico ya está registrado."
-
-        if error is None:
-            try:
-                cursor = db.execute(
-                    """
-                    INSERT INTO users (
-                        username,
-                        email,
-                        password_hash,
-                        display_name,
-                        role
-                    )
-                    VALUES (?, ?, ?, ?, 'client')
-                    """,
-                    (
-                        username,
-                        email,
-                        generate_password_hash(password),
-                        display_name,
-                    ),
-                )
-
-                db.commit()
-
-                row = db.execute(
-                    """
-                    SELECT
-                        id,
-                        username,
-                        email,
-                        display_name,
-                        role,
-                        is_active
-                    FROM users
-                    WHERE id = ?
-                    """,
-                    (cursor.lastrowid,),
-                ).fetchone()
-
-                login_user(User(row))
-
-                flash("Cuenta creada correctamente.", "success")
-
-                return redirect(url_for("catalog.catalog"))
-
-            except sqlite3.IntegrityError:
-                db.rollback()
-                error = "No se ha podido crear la cuenta."
-
-        flash(error, "error")
-
-    return render_template("auth/register.html")
-
-
-@auth_bp.route("/login", methods=("GET", "POST"))
-def login():
-    if current_user.is_authenticated:
-        return redirect(url_for("catalog.catalog"))
-
-    if request.method == "POST":
-        identifier = request.form.get("identifier", "").strip()
-        password = request.form.get("password", "")
-
-        row = get_db().execute(
+        user_row = db.execute(
             """
             SELECT
                 id,
@@ -191,44 +244,300 @@ def login():
                 role,
                 is_active
             FROM users
-            WHERE (username = ? OR email = ?)
-              AND is_active = 1
+            WHERE username = ?
+               OR email = ?
+            LIMIT 1
             """,
-            (identifier, identifier),
+            (
+                identifier,
+                identifier,
+            ),
         ).fetchone()
 
-        if row is None or not check_password_hash(
-            row["password_hash"],
-            password,
-        ):
-            flash("Usuario, correo o contraseña incorrectos.", "error")
-            return render_template("auth/login.html")
+        credentials_are_valid = (
+            user_row is not None
+            and check_password_hash(
+                user_row["password_hash"],
+                password,
+            )
+        )
 
-        login_user(User(row))
+        if not credentials_are_valid:
+            flash(
+                "Usuario, correo o contraseña incorrectos.",
+                "error",
+            )
 
-        flash("Sesión iniciada correctamente.", "success")
+            return render_template(
+                "auth/login.html"
+            )
 
-        return redirect(url_for("catalog.catalog"))
+        if not user_row["is_active"]:
+            support_email = (
+                get_support_email()
+            )
 
-    return render_template("auth/login.html")
+            flash(
+                (
+                    "Tu cuenta ha sido suspendida y "
+                    "no puedes iniciar sesión. "
+                    "Si quieres conocer más información "
+                    "o solicitar una revisión, contacta "
+                    f"con soporte en {support_email}."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "auth/login.html"
+            )
+
+        user = row_to_user(
+            user_row
+        )
+
+        login_user(
+            user
+        )
+
+        if user.role == "admin":
+            return redirect(
+                url_for(
+                    "admin.dashboard"
+                )
+            )
+
+        return redirect(
+            url_for(
+                "catalog.catalog"
+            )
+        )
+
+    return render_template(
+        "auth/login.html"
+    )
 
 
-@auth_bp.post("/logout")
-def logout():
+@auth_bp.route(
+    "/register",
+    methods=("GET", "POST"),
+)
+def register():
+    """Registra una nueva cuenta de cliente."""
+
     if current_user.is_authenticated:
-        logout_user()
-        flash("Sesión cerrada.", "info")
+        return redirect(
+            url_for(
+                "catalog.catalog"
+            )
+        )
 
-    return redirect(url_for("index"))
+    if request.method == "POST":
+        username = request.form.get(
+            "username",
+            "",
+        ).strip()
+
+        email = request.form.get(
+            "email",
+            "",
+        ).strip().casefold()
+
+        display_name = request.form.get(
+            "display_name",
+            "",
+        ).strip()
+
+        country_code = request.form.get(
+            "country_code",
+            "ES",
+        ).strip().upper()
+
+        password = request.form.get(
+            "password",
+            "",
+        )
+
+        errors = []
+
+        if not (
+            USERNAME_MIN_LENGTH
+            <= len(username)
+            <= USERNAME_MAX_LENGTH
+        ):
+            errors.append(
+                "El usuario debe tener entre "
+                f"{USERNAME_MIN_LENGTH} y "
+                f"{USERNAME_MAX_LENGTH} caracteres."
+            )
+
+        if any(
+            character.isspace()
+            for character in username
+        ):
+            errors.append(
+                "El nombre de usuario no puede "
+                "contener espacios."
+            )
+
+        if not EMAIL_PATTERN.fullmatch(
+            email
+        ):
+            errors.append(
+                "Introduce un correo electrónico válido."
+            )
+
+        if not display_name:
+            errors.append(
+                "El nombre visible es obligatorio."
+            )
+
+        if not (
+            len(country_code) == 2
+            and country_code.isalpha()
+        ):
+            errors.append(
+                "El país debe indicarse con "
+                "un código de dos letras."
+            )
+
+        if (
+            len(password)
+            < PASSWORD_MIN_LENGTH
+        ):
+            errors.append(
+                "La contraseña debe tener al menos "
+                f"{PASSWORD_MIN_LENGTH} caracteres."
+            )
+
+        db = get_db()
+
+        conflict = db.execute(
+            """
+            SELECT id
+            FROM users
+            WHERE username = ? COLLATE NOCASE
+               OR email = ? COLLATE NOCASE
+            LIMIT 1
+            """,
+            (
+                username,
+                email,
+            ),
+        ).fetchone()
+
+        if conflict is not None:
+            errors.append(
+                "Ya existe una cuenta con ese "
+                "usuario o correo."
+            )
+
+        if errors:
+            for error in errors:
+                flash(
+                    error,
+                    "error",
+                )
+
+            return render_template(
+                "auth/register.html"
+            )
+
+        try:
+            db.execute(
+                """
+                INSERT INTO users (
+                    username,
+                    email,
+                    password_hash,
+                    display_name,
+                    role,
+                    country_code,
+                    is_active
+                )
+                VALUES (
+                    ?, ?, ?, ?,
+                    'client', ?, 1
+                )
+                """,
+                (
+                    username,
+                    email,
+                    generate_password_hash(
+                        password
+                    ),
+                    display_name,
+                    country_code,
+                ),
+            )
+
+            db.commit()
+
+        except sqlite3.IntegrityError:
+            db.rollback()
+
+            flash(
+                "No se ha podido crear la cuenta "
+                "porque el usuario o correo ya existe.",
+                "error",
+            )
+
+            return render_template(
+                "auth/register.html"
+            )
+
+        flash(
+            "Cuenta creada correctamente. "
+            "Ya puedes iniciar sesión.",
+            "success",
+        )
+
+        return redirect(
+            url_for(
+                "auth.login"
+            )
+        )
+
+    return render_template(
+        "auth/register.html"
+    )
 
 
-@click.command("create-admin")
-@click.option("--username", prompt="Usuario")
-@click.option("--email", prompt="Correo electrónico")
-@click.option("--display-name", prompt="Nombre visible")
+@auth_bp.route(
+    "/logout",
+    methods=("POST",),
+)
+@login_required
+def logout():
+    """Cierra la sesión actual."""
+
+    logout_user()
+
+    return redirect(
+        url_for(
+            "index"
+        )
+    )
+
+
+@click.command(
+    "create-admin"
+)
+@click.option(
+    "--username",
+    prompt="Usuario administrador",
+)
+@click.option(
+    "--email",
+    prompt="Correo administrador",
+)
+@click.option(
+    "--display-name",
+    prompt="Nombre visible",
+)
 @click.option(
     "--password",
-    prompt="Contraseña",
+    prompt=True,
     hide_input=True,
     confirmation_prompt=True,
 )
@@ -239,28 +548,40 @@ def create_admin_command(
     display_name,
     password,
 ):
-    """Crea una cuenta con permisos de administrador."""
+    """Crea una cuenta administrativa."""
 
-    if len(password) < 8:
+    username = username.strip()
+    email = email.strip().casefold()
+    display_name = (
+        display_name.strip()
+    )
+
+    if len(password) < PASSWORD_MIN_LENGTH:
         raise click.ClickException(
-            "La contraseña debe tener al menos 8 caracteres."
+            "La contraseña debe tener al menos "
+            f"{PASSWORD_MIN_LENGTH} caracteres."
         )
 
     db = get_db()
 
-    existing_user = db.execute(
+    existing = db.execute(
         """
         SELECT id
         FROM users
-        WHERE username = ?
-           OR email = ?
+        WHERE username = ? COLLATE NOCASE
+           OR email = ? COLLATE NOCASE
+        LIMIT 1
         """,
-        (username, email),
+        (
+            username,
+            email,
+        ),
     ).fetchone()
 
-    if existing_user is not None:
+    if existing is not None:
         raise click.ClickException(
-            "El usuario o correo ya existe."
+            "Ya existe una cuenta con ese "
+            "usuario o correo."
         )
 
     db.execute(
@@ -270,23 +591,52 @@ def create_admin_command(
             email,
             password_hash,
             display_name,
-            role
+            role,
+            country_code,
+            is_active
         )
-        VALUES (?, ?, ?, ?, 'admin')
+        VALUES (
+            ?, ?, ?, ?,
+            'admin', 'ES', 1
+        )
         """,
         (
             username,
-            email.lower(),
-            generate_password_hash(password),
+            email,
+            generate_password_hash(
+                password
+            ),
             display_name,
         ),
     )
 
     db.commit()
 
-    click.echo("Administrador creado correctamente.")
+    click.echo(
+        "Administrador creado correctamente."
+    )
 
 
 def init_app(app):
-    login_manager.init_app(app)
-    app.cli.add_command(create_admin_command)
+    """Inicializa Flask-Login y comandos de autenticación."""
+
+    login_manager.login_view = (
+        "auth.login"
+    )
+
+    login_manager.login_message = (
+        "Inicia sesión para acceder "
+        "a esta sección."
+    )
+
+    login_manager.login_message_category = (
+        "error"
+    )
+
+    login_manager.init_app(
+        app
+    )
+
+    app.cli.add_command(
+        create_admin_command
+    )

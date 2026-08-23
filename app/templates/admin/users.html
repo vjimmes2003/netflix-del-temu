@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}
+Usuarios — Administración
+{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/admin_users.css'
+    ) }}"
+>
+
+<main class="admin-page">
+
+    <section class="admin-heading">
+
+        <div>
+
+            <a
+                href="{{ url_for(
+                    'admin.dashboard'
+                ) }}"
+                class="admin-back-link"
+            >
+                ← Panel de administración
+            </a>
+
+            <p class="eyebrow">
+                ADMINISTRACIÓN
+            </p>
+
+            <h1>
+                Usuarios
+            </h1>
+
+            <p>
+                Gestión de cuentas de cliente.
+            </p>
+
+        </div>
+
+        <a
+            href="{{ url_for(
+                'admin.create_user'
+            ) }}"
+            class="admin-primary-button"
+        >
+            + Crear cliente
+        </a>
+
+    </section>
+
+
+    {% with messages = get_flashed_messages(
+        with_categories=true
+    ) %}
+
+        {% if messages %}
+
+            <section class="admin-messages">
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="admin-message
+                        admin-message-{{ category }}"
+                    >
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </section>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <section
+        class="admin-stat-grid
+               admin-stat-grid-small"
+    >
+
+        <article class="admin-stat-card">
+            <span>Clientes</span>
+            <strong>{{ total_clients }}</strong>
+        </article>
+
+        <article class="admin-stat-card">
+            <span>Activos</span>
+            <strong>{{ active_clients }}</strong>
+        </article>
+
+        <article class="admin-stat-card">
+            <span>Inactivos</span>
+            <strong>{{ inactive_clients }}</strong>
+        </article>
+
+    </section>
+
+
+    <section class="admin-table-card">
+
+        <div class="admin-table-scroll">
+
+            <table class="admin-table">
+
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Correo</th>
+                        <th>País</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Alta</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for user in users %}
+
+                        <tr
+                            {% if not user["is_active"] %}
+                                class="admin-row-inactive"
+                            {% endif %}
+                        >
+
+                            <td>
+                                <strong>
+                                    {{
+                                        user["display_name"]
+                                        or user["username"]
+                                    }}
+                                </strong>
+
+                                <small>
+                                    @{{ user["username"] }}
+                                </small>
+                            </td>
+
+                            <td>
+                                {{ user["email"] }}
+                            </td>
+
+                            <td>
+                                {{
+                                    user["country_code"]
+                                    or "—"
+                                }}
+                            </td>
+
+                            <td>
+                                {% if user["role"] == "admin" %}
+                                    <span
+                                        class="admin-role
+                                               admin-role-admin"
+                                    >
+                                        Administrador
+                                    </span>
+                                {% else %}
+                                    <span class="admin-role">
+                                        Cliente
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if user["is_active"] %}
+                                    <span
+                                        class="admin-status
+                                               admin-status-active"
+                                    >
+                                        Activo
+                                    </span>
+                                {% else %}
+                                    <span
+                                        class="admin-status
+                                               admin-status-inactive"
+                                    >
+                                        Inactivo
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if user["created_at"] %}
+                                    {{ user["created_at"][:10] }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if user["role"] == "client" %}
+
+                                    <div class="admin-row-actions">
+
+                                        <a
+                                            href="{{ url_for(
+                                                'admin.edit_user',
+                                                user_id=user['id']
+                                            ) }}"
+                                        >
+                                            Editar
+                                        </a>
+
+                                        <form
+                                            method="post"
+                                            action="{{ url_for(
+                                                'admin.toggle_user_active',
+                                                user_id=user['id']
+                                            ) }}"
+                                        >
+                                            <button
+                                                type="submit"
+                                                class="
+                                                {% if user['is_active'] %}
+                                                    danger
+                                                {% else %}
+                                                    success
+                                                {% endif %}"
+                                            >
+                                                {% if user["is_active"] %}
+                                                    Desactivar
+                                                {% else %}
+                                                    Reactivar
+                                                {% endif %}
+                                            </button>
+                                        </form>
+
+                                    </div>
+
+                                {% else %}
+
+                                    <span class="admin-protected">
+                                        Cuenta protegida
+                                    </span>
+
+                                {% endif %}
+                            </td>
+
+                        </tr>
+
+                    {% else %}
+
+                        <tr>
+                            <td
+                                colspan="7"
+                                class="admin-empty-cell"
+                            >
+                                No hay usuarios registrados.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</main>
+
+{% endblock %}

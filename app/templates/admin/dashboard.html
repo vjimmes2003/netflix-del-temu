@@ -4,29 +4,142 @@
 Administración — Netflix del Temu
 {% endblock %}
 
-
 {% block content %}
 
-<main class="page-shell">
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/admin_users.css'
+    ) }}"
+>
 
-    <section class="panel">
+<main class="admin-page">
 
-        <p class="eyebrow">
-            ADMINISTRACIÓN
-        </p>
+    <section class="admin-heading">
 
-        <h1 class="page-title">
-            Panel de administración
-        </h1>
+        <div>
+            <p class="eyebrow">
+                ADMINISTRACIÓN
+            </p>
 
-        <p class="description">
-            Acceso autorizado para
-            {{ current_user.display_name }}.
-        </p>
+            <h1>
+                Panel de control
+            </h1>
 
-        <p class="role-badge">
-            Rol: {{ current_user.role }}
-        </p>
+            <p>
+                Gestión interna de usuarios
+                y catálogo.
+            </p>
+        </div>
+
+        <a
+            href="{{ url_for(
+                'catalog.catalog'
+            ) }}"
+            class="admin-secondary-link"
+        >
+            Ver catálogo
+        </a>
+
+    </section>
+
+
+    <section class="admin-stat-grid">
+
+        <article class="admin-stat-card">
+            <span>Clientes</span>
+
+            <strong>
+                {{ client_stats["total_clients"] or 0 }}
+            </strong>
+
+            <small>
+                {{ client_stats["active_clients"] or 0 }}
+                activos ·
+                {{ client_stats["inactive_clients"] or 0 }}
+                inactivos
+            </small>
+        </article>
+
+        <article class="admin-stat-card">
+            <span>Películas</span>
+
+            <strong>
+                {{ media_stats["movies"] or 0 }}
+            </strong>
+
+            <small>
+                Contenidos almacenados
+            </small>
+        </article>
+
+        <article class="admin-stat-card">
+            <span>Series</span>
+
+            <strong>
+                {{ media_stats["series"] or 0 }}
+            </strong>
+
+            <small>
+                Contenidos almacenados
+            </small>
+        </article>
+
+    </section>
+
+
+    <section class="admin-module-grid">
+
+        <a
+            href="{{ url_for(
+                'admin.users'
+            ) }}"
+            class="admin-module-card"
+        >
+            <span class="admin-module-icon">
+                U
+            </span>
+
+            <div>
+                <h2>
+                    Usuarios
+                </h2>
+
+                <p>
+                    Crear, editar, desactivar
+                    y reactivar clientes.
+                </p>
+            </div>
+
+            <span class="admin-module-arrow">
+                →
+            </span>
+        </a>
+
+
+        <article
+            class="admin-module-card
+                   admin-module-disabled"
+        >
+            <span class="admin-module-icon">
+                C
+            </span>
+
+            <div>
+                <h2>
+                    Catálogo
+                </h2>
+
+                <p>
+                    Gestión de películas y series.
+                </p>
+
+                <small>
+                    Disponible en la Fase 9
+                </small>
+            </div>
+        </article>
 
     </section>
 
