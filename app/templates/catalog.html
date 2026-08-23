@@ -84,6 +84,24 @@ Catálogo — Netflix del Temu
                     Series
                 </a>
 
+                <a
+                    href="{{ url_for(
+                        'activity.favorites'
+                    ) }}"
+                    class="catalog-tab"
+                >
+                    Favoritos
+                </a>
+
+                <a
+                    href="{{ url_for(
+                        'activity.watched'
+                    ) }}"
+                    class="catalog-tab"
+                >
+                    Vistos
+                </a>
+
             </nav>
 
             {% if mature_content_confirmed %}

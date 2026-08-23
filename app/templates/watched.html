@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}
+Vistos — Netflix del Temu
+{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/activity.css'
+    ) }}"
+>
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/content_controls.css'
+    ) }}"
+>
+
+<main class="activity-page">
+
+    <section class="activity-heading activity-heading-row">
+
+        <div>
+
+            <p class="eyebrow">
+                MI ACTIVIDAD
+            </p>
+
+            <h1>
+                Contenido visto
+            </h1>
+
+            <p class="activity-subtitle">
+                Películas completadas y
+                series que has empezado.
+            </p>
+
+        </div>
+
+        <div class="activity-heading-actions">
+
+            {% if mature_content_confirmed %}
+
+                <form
+                    method="post"
+                    action="{{ url_for(
+                        'catalog.toggle_mature_content'
+                    ) }}"
+                    class="mature-quick-control"
+                >
+
+                    <input
+                        type="hidden"
+                        name="return_to"
+                        value="watched"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="enabled"
+                        value="{{
+                            0
+                            if mature_content_enabled
+                            else 1
+                        }}"
+                    >
+
+                    <div class="mature-switch-copy">
+                        <span>Contenido maduro</span>
+                        <small>
+                            {% if mature_content_enabled %}
+                                Visible
+                            {% else %}
+                                Oculto
+                            {% endif %}
+                        </small>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="mature-switch-button
+                        {% if mature_content_enabled %}
+                            active
+                        {% endif %}"
+                        aria-label="Cambiar visibilidad de contenido maduro"
+                    >
+                        <span></span>
+                    </button>
+
+                </form>
+
+            {% else %}
+
+                <a
+                    href="{{ url_for(
+                        'catalog.content_settings'
+                    ) }}"
+                    class="mature-first-setup"
+                >
+                    <span>Contenido maduro</span>
+                    <small>Configurar</small>
+                </a>
+
+            {% endif %}
+
+            <nav class="activity-nav">
+
+                <a href="{{ url_for('catalog.catalog') }}">Catálogo</a>
+                <a href="{{ url_for('activity.favorites') }}">Favoritos</a>
+
+            </nav>
+
+        </div>
+
+    </section>
+
+
+    <section class="activity-section">
+
+        <div class="activity-section-title">
+
+            <h2>
+                Películas vistas
+            </h2>
+
+            <span>
+                {{ movies | length }}
+            </span>
+
+        </div>
+
+
+        {% if movies %}
+
+            <div class="library-grid">
+
+                {% for item in movies %}
+
+                    <article class="library-card">
+
+                        <a
+                            href="{{ url_for(
+                                'catalog.media_detail',
+                                media_id=item['id']
+                            ) }}"
+                            class="library-card-main"
+                        >
+
+                            <div class="library-poster">
+
+                                {% if item["poster_path"] %}
+
+                                    <img
+                                        src="{{ item['poster_path']
+                                            | tmdb_image('w500') }}"
+                                        alt="Portada de {{ item['title'] }}"
+                                        loading="lazy"
+                                    >
+
+                                {% else %}
+
+                                    <div class="library-placeholder">
+                                        Sin portada
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                            <div class="library-card-info">
+
+                                <span class="library-type">
+                                    Película
+                                </span>
+
+                                <h3>
+                                    {{ item["title"] }}
+                                </h3>
+
+                                <p>
+                                    {% if item["release_year"] %}
+                                        {{ item["release_year"] }}
+                                    {% endif %}
+
+                                    {% if item["tmdb_rating"] %}
+                                        · ★
+                                        {{
+                                            "%.1f"
+                                            | format(
+                                                item["tmdb_rating"]
+                                            )
+                                        }}
+                                    {% endif %}
+                                </p>
+
+                            </div>
+
+                        </a>
+
+                        <form
+                            method="post"
+                            action="{{ url_for(
+                                'activity.toggle_movie_watched',
+                                media_id=item['id']
+                            ) }}"
+                        >
+
+                            <input
+                                type="hidden"
+                                name="return_to"
+                                value="watched"
+                            >
+
+                            <button
+                                type="submit"
+                                class="library-remove-button"
+                            >
+                                Desmarcar vista
+                            </button>
+
+                        </form>
+
+                    </article>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <p class="activity-section-empty">
+                No has marcado ninguna película
+                como vista.
+            </p>
+
+        {% endif %}
+
+    </section>
+
+
+    <section class="activity-section">
+
+        <div class="activity-section-title">
+
+            <h2>
+                Series empezadas
+            </h2>
+
+            <span>
+                {{ series | length }}
+            </span>
+
+        </div>
+
+
+        {% if series %}
+
+            <div class="library-grid">
+
+                {% for item in series %}
+
+                    <article class="library-card">
+
+                        <a
+                            href="{{ url_for(
+                                'catalog.media_detail',
+                                media_id=item['id']
+                            ) }}"
+                            class="library-card-main"
+                        >
+
+                            <div class="library-poster">
+
+                                {% if item["poster_path"] %}
+
+                                    <img
+                                        src="{{ item['poster_path']
+                                            | tmdb_image('w500') }}"
+                                        alt="Portada de {{ item['title'] }}"
+                                        loading="lazy"
+                                    >
+
+                                {% else %}
+
+                                    <div class="library-placeholder">
+                                        Sin portada
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                            <div class="library-card-info">
+
+                                <span class="library-type">
+                                    Serie
+                                </span>
+
+                                <h3>
+                                    {{ item["title"] }}
+                                </h3>
+
+                                <p>
+                                    {{
+                                        item["watched_episodes"]
+                                    }}
+                                    /
+                                    {{
+                                        item["available_episodes"]
+                                    }}
+                                    episodios vistos
+                                </p>
+
+                                {% if item["available_episodes"] %}
+
+                                    <div
+                                        class="library-progress"
+                                        aria-label="Progreso de la serie"
+                                    >
+                                        <span
+                                            style="
+                                                width:
+                                                {{
+                                                    (
+                                                        item[
+                                                            'watched_episodes'
+                                                        ]
+                                                        * 100
+                                                        / item[
+                                                            'available_episodes'
+                                                        ]
+                                                    )
+                                                    | round
+                                                    | int
+                                                }}%;
+                                            "
+                                        ></span>
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                        </a>
+
+                    </article>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <p class="activity-section-empty">
+                No has marcado episodios como vistos.
+            </p>
+
+        {% endif %}
+
+    </section>
+
+</main>
+
+{% endblock %}

@@ -15,6 +15,14 @@
     ) }}"
 >
 
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/activity.css'
+    ) }}"
+>
+
 <main class="detail-page">
 
     {% if media["backdrop_path"] %}
@@ -150,6 +158,120 @@
             </div>
 
 
+            {% if media["media_type"] == "series" and series_progress %}
+
+                <section
+                    class="series-challenge
+                    {% if series_progress['completed'] %}
+                        series-challenge-completed
+                    {% endif %}"
+                >
+                    <div class="series-challenge-copy">
+                        <p class="series-challenge-label">RETO DE SERIE</p>
+
+                        {% if series_progress["completed"] %}
+                            <h2>✓ Serie completada</h2>
+                            <p>
+                                Has visto los {{ series_progress["total_episodes"] }}
+                                episodios disponibles.
+                            </p>
+                        {% elif series_progress["total_episodes"] %}
+                            <h2>{{ series_progress["percent"] }}% completado</h2>
+                            <p>
+                                {{ series_progress["watched_episodes"] }} de
+                                {{ series_progress["total_episodes"] }} episodios vistos
+                            </p>
+                        {% else %}
+                            <h2>Seguimiento sin iniciar</h2>
+                            <p>
+                                Todavía no hay episodios cargados
+                                para calcular el progreso.
+                            </p>
+                        {% endif %}
+                    </div>
+
+                    {% if series_progress["total_episodes"] %}
+                        <div class="series-challenge-percent">
+                            {{ series_progress["percent"] }}%
+                        </div>
+                        <div class="series-challenge-bar" aria-label="Progreso de la serie">
+                            <span style="width: {{ series_progress['percent'] }}%;"></span>
+                        </div>
+                    {% endif %}
+                </section>
+
+            {% endif %}
+
+            <div class="detail-user-actions">
+
+                <form
+                    method="post"
+                    action="{{ url_for(
+                        'activity.toggle_favorite',
+                        media_id=media['id']
+                    ) }}"
+                >
+
+                    <input
+                        type="hidden"
+                        name="return_to"
+                        value="detail"
+                    >
+
+                    <button
+                        type="submit"
+                        class="activity-button
+                        {% if is_favorite %}
+                            activity-button-active
+                        {% endif %}"
+                    >
+                        {% if is_favorite %}
+                            ♥ En favoritos
+                        {% else %}
+                            ♡ Añadir a favoritos
+                        {% endif %}
+                    </button>
+
+                </form>
+
+
+                {% if media["media_type"] == "movie" %}
+
+                    <form
+                        method="post"
+                        action="{{ url_for(
+                            'activity.toggle_movie_watched',
+                            media_id=media['id']
+                        ) }}"
+                    >
+
+                        <input
+                            type="hidden"
+                            name="return_to"
+                            value="detail"
+                        >
+
+                        <button
+                            type="submit"
+                            class="activity-button
+                            {% if movie_watched %}
+                                activity-button-active
+                            {% endif %}"
+                        >
+                            {% if movie_watched %}
+                                ✓ Película vista
+                            {% else %}
+                                Marcar como vista
+                            {% endif %}
+                        </button>
+
+                    </form>
+
+                {% endif %}
+
+            </div>
+
+
             {% if genres %}
 
                 <div class="chip-list">
@@ -257,7 +379,17 @@
 
                 {% for season in seasons %}
 
-                    <article class="season-card">
+                    <a
+                        href="{{ url_for(
+                            'catalog.season_detail',
+                            media_id=media['id'],
+                            season_id=season['id']
+                        ) }}"
+                        class="season-card season-card-link
+                        {% if season['is_completed'] %}
+                            season-card-completed
+                        {% endif %}"
+                    >
 
                         {% if season["poster_path"] %}
 
@@ -283,14 +415,37 @@
                                 {{ season["name"] }}
                             </h3>
 
-                            <p>
-                                {% if season["episode_count"] %}
-                                    {{ season["episode_count"] }}
-                                    episodios
+                            {% if season["imported_episode_count"] %}
+
+                                {% if season["is_completed"] %}
+                                    <p class="season-progress season-progress-completed">
+                                        ✓ Temporada completada
+                                    </p>
                                 {% else %}
-                                    Episodios sin determinar
+                                    <p class="season-progress">
+                                        {{ season["watched_episode_count"] }}
+                                        /
+                                        {{ season["imported_episode_count"] }}
+                                        vistos
+                                    </p>
                                 {% endif %}
-                            </p>
+
+                            {% else %}
+
+                                <p>
+                                    Episodios no cargados
+                                </p>
+
+                            {% endif %}
+
+                            {% if season["episode_count"] %}
+
+                                <p>
+                                    {{ season["episode_count"] }}
+                                    episodios según TMDB
+                                </p>
+
+                            {% endif %}
 
                             {% if season["air_date"] %}
 
@@ -305,7 +460,7 @@
 
                         </div>
 
-                    </article>
+                    </a>
 
                 {% endfor %}
 

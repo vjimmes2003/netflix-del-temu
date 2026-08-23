@@ -394,7 +394,103 @@ El estilo definitivo se revisará en la fase general de diseño y UX.
 
 ## Commit
 ```text
-feat: add catalog search and filtering
+feat: add catalog and filtering
+```
+
+**Estado: completada.**
+
+---
+
+# Fase 7 — Favoritos, vistos y seguimiento de series
+
+## Objetivo
+Permitir que cada usuario organice contenido y registre su progreso de visualización.
+
+## Implementación
+Se añadió `app/activity.py` para gestionar favoritos, películas vistas, episodios vistos y temporadas completas.
+Las operaciones usan SQL directo y quedan asociadas al usuario autenticado.
+
+## Favoritos y vistos
+Rutas personales:
+```text
+/favorites
+/watched
+```
+Tablas utilizadas:
+```text
+favorites
+movie_watches
+episode_watches
+```
+`/favorites` muestra películas y series guardadas.
+`/watched` muestra películas vistas y series con episodios registrados.
+
+## Seguimiento de series
+La ficha de una serie permite acceder a temporadas y episodios.
+Cada episodio puede marcarse o desmarcarse como visto.
+También se añadió `Marcar temporada como vista` y `Desmarcar temporada`.
+La acción afecta únicamente a episodios disponibles en SQLite.
+Las temporadas sin episodios importados muestran un estado vacío sin generar actividad.
+
+## Progreso
+El progreso se calcula dinámicamente mediante SQL, sin una tabla específica.
+Se muestran episodios vistos, episodios disponibles y porcentaje.
+La ficha de serie incorpora `RETO DE SERIE`.
+Al alcanzar el 100 % cambia a `✓ Serie completada`.
+Las temporadas al 100 % también muestran un estado visual de completadas.
+
+## Control de contenido
+Favoritos y Vistos mantienen la política:
+```text
+general  → visible
+mature   → depende del usuario
+explicit → bloqueado
+```
+El slider `mature` está disponible en ambas páginas.
+Desactivarlo oculta registros maduros, pero no los elimina.
+
+## Archivos principales
+```text
+app/activity.py
+app/catalog.py
+app/__init__.py
+app/templates/media_detail.html
+app/templates/season_detail.html
+app/templates/favorites.html
+app/templates/watched.html
+app/static/css/activity.css
+```
+
+## Evidencias
+Se guardaron capturas de:
+- favorito desde ficha y lista de favoritos;
+- película vista y lista de vistos;
+- temporadas y episodios;
+- episodios y temporada completados;
+- progreso global y serie al 100 %;
+- serie dentro de Vistos;
+- control `mature` en Favoritos y Vistos.
+
+Rango de evidencias:
+```text
+documentation/screenshots/fase7_01_*.png
+...
+documentation/screenshots/fase7_13_*.png
+```
+
+## Validación
+- favoritos e historial independientes por usuario;
+- persistencia después de recargar y volver a iniciar sesión;
+- temporadas completas y progreso correctos;
+- serie completada al 100 %;
+- listas protegidas por autenticación;
+- `mature` operativo sin borrar datos;
+- `explicit` continúa bloqueado;
+- temporadas sin episodios no producen errores.
+
+## Commit
+```text
+feat: add favorites watched tracking and series progress
 ```
 
 **Estado: completada.**

@@ -395,24 +395,115 @@ def media_detail(media_id):
         (media_id,),
     ).fetchall()
 
+    favorite = db.execute(
+        """
+        SELECT 1
+        FROM favorites
+        WHERE user_id = ?
+          AND media_id = ?
+        """,
+        (
+            current_user.id,
+            media_id,
+        ),
+    ).fetchone()
+
+    is_favorite = favorite is not None
+
+    movie_watched = False
+
+    if media["media_type"] == "movie":
+        movie_watch = db.execute(
+            """
+            SELECT 1
+            FROM movie_watches
+            WHERE user_id = ?
+              AND media_id = ?
+            """,
+            (
+                current_user.id,
+                media_id,
+            ),
+        ).fetchone()
+
+        movie_watched = (
+            movie_watch is not None
+        )
+
     seasons = []
+    series_progress = None
 
     if media["media_type"] == "series":
+        progress_row = db.execute(
+            """
+            SELECT
+                COUNT(DISTINCT e.id) AS total_episodes,
+                COUNT(DISTINCT ew.episode_id) AS watched_episodes
+            FROM seasons AS s
+            LEFT JOIN episodes AS e
+              ON e.season_id = s.id
+             AND e.is_visible = 1
+            LEFT JOIN episode_watches AS ew
+              ON ew.episode_id = e.id
+             AND ew.user_id = ?
+            WHERE s.media_id = ?
+              AND s.is_visible = 1
+            """,
+            (current_user.id, media_id),
+        ).fetchone()
+
+        total_episodes = progress_row["total_episodes"] if progress_row else 0
+        watched_episodes = progress_row["watched_episodes"] if progress_row else 0
+        progress_percent = round(watched_episodes * 100 / total_episodes) if total_episodes else 0
+
+        series_progress = {
+            "total_episodes": total_episodes,
+            "watched_episodes": watched_episodes,
+            "percent": progress_percent,
+            "completed": total_episodes > 0 and watched_episodes == total_episodes,
+        }
+
         seasons = db.execute(
             """
             SELECT
-                id,
-                season_number,
-                name,
-                air_date,
-                episode_count,
-                poster_path
-            FROM seasons
-            WHERE media_id = ?
-              AND is_visible = 1
-            ORDER BY season_number
+                s.id,
+                s.season_number,
+                s.name,
+                s.air_date,
+                s.episode_count,
+                s.poster_path,
+                COUNT(e.id)
+                    AS imported_episode_count,
+                COUNT(ew.episode_id)
+                    AS watched_episode_count,
+                CASE
+                    WHEN COUNT(e.id) > 0
+                     AND COUNT(ew.episode_id) = COUNT(e.id)
+                    THEN 1
+                    ELSE 0
+                END AS is_completed
+            FROM seasons AS s
+            LEFT JOIN episodes AS e
+              ON e.season_id = s.id
+             AND e.is_visible = 1
+            LEFT JOIN episode_watches AS ew
+              ON ew.episode_id = e.id
+             AND ew.user_id = ?
+            WHERE s.media_id = ?
+              AND s.is_visible = 1
+            GROUP BY
+                s.id,
+                s.season_number,
+                s.name,
+                s.air_date,
+                s.episode_count,
+                s.poster_path
+            ORDER BY s.season_number
             """,
-            (media_id,),
+            (
+                current_user.id,
+                media_id,
+            ),
         ).fetchall()
 
     return render_template(
@@ -422,6 +513,115 @@ def media_detail(media_id):
         countries=countries,
         tags=tags,
         seasons=seasons,
+        mature_content_enabled=mature_enabled,
+        mature_content_confirmed=mature_confirmed,
+        is_favorite=is_favorite,
+        movie_watched=movie_watched,
+        series_progress=series_progress,
+    )
+
+
+@catalog_bp.route(
+    "/catalog/<int:media_id>/season/<int:season_id>"
+)
+@login_required
+def season_detail(
+    media_id,
+    season_id,
+):
+    """Muestra los episodios disponibles de una temporada."""
+
+    db = get_db()
+
+    mature_enabled, mature_confirmed = (
+        get_mature_preferences(db)
+    )
+
+    content_filter = get_content_filter(
+        mature_enabled,
+        alias="m",
+    )
+
+    media = db.execute(
+        f"""
+        SELECT m.*
+        FROM media AS m
+        WHERE m.id = ?
+          AND m.media_type = 'series'
+          AND m.is_visible = 1
+          AND {content_filter}
+        """,
+        (media_id,),
+    ).fetchone()
+
+    if media is None:
+        abort(404)
+
+    season = db.execute(
+        """
+        SELECT *
+        FROM seasons
+        WHERE id = ?
+          AND media_id = ?
+          AND is_visible = 1
+        """,
+        (
+            season_id,
+            media_id,
+        ),
+    ).fetchone()
+
+    if season is None:
+        abort(404)
+
+    episodes = db.execute(
+        """
+        SELECT
+            e.id,
+            e.episode_number,
+            e.name,
+            e.overview,
+            e.air_date,
+            e.runtime_minutes,
+            e.still_path,
+            CASE
+                WHEN ew.episode_id IS NULL
+                THEN 0
+                ELSE 1
+            END AS is_watched,
+            ew.watched_at
+        FROM episodes AS e
+        LEFT JOIN episode_watches AS ew
+          ON ew.episode_id = e.id
+         AND ew.user_id = ?
+        WHERE e.season_id = ?
+          AND e.is_visible = 1
+        ORDER BY e.episode_number
+        """,
+        (
+            current_user.id,
+            season_id,
+        ),
+    ).fetchall()
+
+    watched_count = sum(
+        1
+        for episode in episodes
+        if episode["is_watched"]
+    )
+
+    episode_count = len(episodes)
+    season_percent = round(watched_count * 100 / episode_count) if episode_count else 0
+    season_completed = episode_count > 0 and watched_count == episode_count
+
+    return render_template(
+        "season_detail.html",
+        media=media,
+        season=season,
+        episodes=episodes,
+        watched_count=watched_count,
+        season_percent=season_percent,
+        season_completed=season_completed,
         mature_content_enabled=mature_enabled,
         mature_content_confirmed=mature_confirmed,
     )
@@ -625,6 +825,25 @@ def toggle_mature_content():
 
     if sort_option not in VALID_SORT_OPTIONS:
         sort_option = DEFAULT_SORT
+
+    return_to = request.form.get(
+        "return_to",
+        "catalog",
+    )
+
+    if return_to == "favorites":
+        return redirect(
+            url_for(
+                "activity.favorites"
+            )
+        )
+
+    if return_to == "watched":
+        return redirect(
+            url_for(
+                "activity.watched"
+            )
+        )
 
     redirect_args = {
         "type": media_type,
