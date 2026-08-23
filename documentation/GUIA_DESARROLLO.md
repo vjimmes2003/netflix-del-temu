@@ -303,6 +303,104 @@ feat: build catalog and content filtering
 
 ---
 
+# Fase 6 — Búsqueda, filtros y ordenación
+
+## Objetivo
+Facilitar la localización de películas y series dentro de un catálogo más amplio.
+
+## Preparación del catálogo
+Antes de probar la búsqueda se amplió la importación desde TMDB.
+
+```text
+1.000 películas solicitadas
+500 series solicitadas
+
+1.376 contenidos revisados
+1.200 general
+167 mature
+9 explicit
+1 título actualizado
+0 errores
+```
+
+La ampliación permite probar los filtros sobre un catálogo más representativo.
+
+## Implementación
+Se añadieron:
+- búsqueda por título y título original;
+- filtro por género;
+- combinación de búsqueda y género;
+- conservación de filtros durante la paginación;
+- conservación al cambiar entre películas y series;
+- compatibilidad con el slider `mature`;
+- botón para limpiar filtros;
+- estado específico sin resultados.
+
+Archivos:
+```text
+app/catalog.py
+app/templates/catalog.html
+app/static/css/search_filters.css
+```
+
+## Seguridad
+Los valores del usuario se envían a SQLite mediante parámetros.
+
+La búsqueda usa `LIKE` escapando `%`, `_` y `\`.
+
+El control de contenido sigue aplicándose:
+```text
+general  → permitido
+mature   → depende del usuario
+explicit → bloqueado
+```
+
+## Ordenación
+Opciones disponibles:
+```text
+Más populares
+Más recientes estrenadas
+Más antiguas
+Mejor valoradas
+```
+
+**Más populares** es la opción predeterminada.
+
+En **Más recientes estrenadas**, las obras ya publicadas aparecen primero. Los próximos estrenos quedan después y los contenidos sin fecha al final.
+
+## Navegación
+Los filtros se almacenan como parámetros GET:
+```text
+/catalog?type=movie&q=alien&genre=18&sort=popularity
+```
+
+Esto permite mantener búsqueda, género, orden y tipo durante la navegación.
+
+## Validación
+- búsqueda parcial por título correcta;
+- búsqueda por título original correcta;
+- filtro por género correcto;
+- título + género funcionan conjuntamente;
+- paginación conserva parámetros;
+- películas/series conservan los filtros;
+- popularidad es el orden por defecto;
+- ordenaciones alternativas correctas;
+- limpiar restaura el catálogo base;
+- el slider `mature` conserva los filtros;
+- `explicit` continúa bloqueado;
+- búsquedas vacías muestran un estado específico.
+
+El estilo definitivo se revisará en la fase general de diseño y UX.
+
+## Commit
+```text
+feat: add catalog search and filtering
+```
+
+**Estado: completada.**
+
+---
+
 # Fuentes técnicas
 
 - Flask: https://flask.palletsprojects.com/

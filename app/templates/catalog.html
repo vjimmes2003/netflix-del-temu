@@ -4,7 +4,6 @@
 Catálogo — Netflix del Temu
 {% endblock %}
 
-
 {% block content %}
 
 <link
@@ -12,6 +11,14 @@ Catálogo — Netflix del Temu
     href="{{ url_for(
         'static',
         filename='css/content_controls.css'
+    ) }}"
+>
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/search_filters.css'
     ) }}"
 >
 
@@ -36,11 +43,10 @@ Catálogo — Netflix del Temu
             </h1>
 
             <p class="catalog-count">
-                {{ total_items }} contenidos disponibles
+                {{ total_items }} contenidos encontrados
             </p>
 
         </div>
-
 
         <div class="catalog-actions">
 
@@ -49,7 +55,10 @@ Catálogo — Netflix del Temu
                 <a
                     href="{{ url_for(
                         'catalog.catalog',
-                        type='movie'
+                        type='movie',
+                        q=search_query,
+                        genre=genre_id,
+                        sort=sort_option
                     ) }}"
                     class="catalog-tab
                     {% if media_type == 'movie' %}
@@ -62,7 +71,10 @@ Catálogo — Netflix del Temu
                 <a
                     href="{{ url_for(
                         'catalog.catalog',
-                        type='series'
+                        type='series',
+                        q=search_query,
+                        genre=genre_id,
+                        sort=sort_option
                     ) }}"
                     class="catalog-tab
                     {% if media_type == 'series' %}
@@ -73,7 +85,6 @@ Catálogo — Netflix del Temu
                 </a>
 
             </nav>
-
 
             {% if mature_content_confirmed %}
 
@@ -90,6 +101,26 @@ Catálogo — Netflix del Temu
                         name="media_type"
                         value="{{ media_type }}"
                     >
+
+                    <input
+                        type="hidden"
+                        name="q"
+                        value="{{ search_query }}"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="sort"
+                        value="{{ sort_option }}"
+                    >
+
+                    {% if genre_id %}
+                        <input
+                            type="hidden"
+                            name="genre"
+                            value="{{ genre_id }}"
+                        >
+                    {% endif %}
 
                     <input
                         type="hidden"
@@ -123,20 +154,6 @@ Catálogo — Netflix del Temu
                         {% if mature_content_enabled %}
                             active
                         {% endif %}"
-                        aria-label="
-                            {% if mature_content_enabled %}
-                                Ocultar contenido maduro
-                            {% else %}
-                                Mostrar contenido maduro
-                            {% endif %}
-                        "
-                        title="
-                            {% if mature_content_enabled %}
-                                Ocultar contenido maduro
-                            {% else %}
-                                Mostrar contenido maduro
-                            {% endif %}
-                        "
                     >
                         <span></span>
                     </button>
@@ -166,6 +183,186 @@ Catálogo — Netflix del Temu
 
     </section>
 
+    <section class="catalog-search-panel">
+
+        <form
+            method="get"
+            action="{{ url_for(
+                'catalog.catalog'
+            ) }}"
+            class="catalog-search-form"
+        >
+
+            <input
+                type="hidden"
+                name="type"
+                value="{{ media_type }}"
+            >
+
+            <label class="search-field">
+
+                <span>
+                    Buscar por título
+                </span>
+
+                <input
+                    type="search"
+                    name="q"
+                    value="{{ search_query }}"
+                    maxlength="100"
+                    placeholder="
+                        {% if media_type == 'movie' %}
+                            Ej. Interstellar
+                        {% else %}
+                            Ej. Breaking Bad
+                        {% endif %}
+                    "
+                    autocomplete="off"
+                >
+
+            </label>
+
+            <label class="search-field">
+
+                <span>
+                    Género
+                </span>
+
+                <select name="genre">
+
+                    <option value="">
+                        Todos los géneros
+                    </option>
+
+                    {% for genre in genres %}
+
+                        <option
+                            value="{{ genre['id'] }}"
+                            {% if genre_id == genre['id'] %}
+                                selected
+                            {% endif %}
+                        >
+                            {{ genre["name"] }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </label>
+
+            <label class="search-field">
+
+                <span>
+                    Ordenar por
+                </span>
+
+                <select name="sort">
+
+                    <option
+                        value="popularity"
+                        {% if sort_option == 'popularity' %}
+                            selected
+                        {% endif %}
+                    >
+                        Más populares
+                    </option>
+
+                    <option
+                        value="newest"
+                        {% if sort_option == 'newest' %}
+                            selected
+                        {% endif %}
+                    >
+                        Más recientes estrenadas
+                    </option>
+
+                    <option
+                        value="oldest"
+                        {% if sort_option == 'oldest' %}
+                            selected
+                        {% endif %}
+                    >
+                        Más antiguas
+                    </option>
+
+                    <option
+                        value="rating"
+                        {% if sort_option == 'rating' %}
+                            selected
+                        {% endif %}
+                    >
+                        Mejor valoradas
+                    </option>
+
+                </select>
+
+            </label>
+
+            <div class="search-form-actions">
+
+                <button
+                    type="submit"
+                    class="search-submit"
+                >
+                    Aplicar
+                </button>
+
+                {% if
+                    search_query
+                    or genre_id
+                    or sort_option != 'popularity'
+                %}
+
+                    <a
+                        href="{{ url_for(
+                            'catalog.catalog',
+                            type=media_type
+                        ) }}"
+                        class="search-clear"
+                    >
+                        Limpiar
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        </form>
+
+        {% if search_query or genre_id %}
+
+            <div class="active-search-summary">
+
+                <span>
+                    Filtros activos:
+                </span>
+
+                {% if search_query %}
+                    <strong>
+                        “{{ search_query }}”
+                    </strong>
+                {% endif %}
+
+                {% if genre_id %}
+
+                    {% for genre in genres %}
+
+                        {% if genre["id"] == genre_id %}
+                            <strong>
+                                {{ genre["name"] }}
+                            </strong>
+                        {% endif %}
+
+                    {% endfor %}
+
+                {% endif %}
+
+            </div>
+
+        {% endif %}
+
+    </section>
 
     {% if media_items %}
 
@@ -200,7 +397,6 @@ Catálogo — Netflix del Temu
 
                         {% endif %}
 
-
                         {% if item["content_level"] == "mature" %}
 
                             <span class="mature-card-badge">
@@ -215,7 +411,6 @@ Catálogo — Netflix del Temu
 
                         {% endif %}
 
-
                         {% if item["tmdb_rating"] %}
 
                             <span class="rating-badge">
@@ -229,7 +424,6 @@ Catálogo — Netflix del Temu
                         {% endif %}
 
                     </div>
-
 
                     <div class="media-card-info">
 
@@ -253,7 +447,6 @@ Catálogo — Netflix del Temu
 
         </section>
 
-
         {% if total_pages > 1 %}
 
             <nav class="pagination">
@@ -264,7 +457,10 @@ Catálogo — Netflix del Temu
                         href="{{ url_for(
                             'catalog.catalog',
                             type=media_type,
-                            page=page - 1
+                            page=page - 1,
+                            q=search_query,
+                            genre=genre_id,
+                            sort=sort_option
                         ) }}"
                         class="pagination-button"
                     >
@@ -273,11 +469,9 @@ Catálogo — Netflix del Temu
 
                 {% endif %}
 
-
                 <span class="pagination-current">
                     Página {{ page }} de {{ total_pages }}
                 </span>
-
 
                 {% if page < total_pages %}
 
@@ -285,7 +479,10 @@ Catálogo — Netflix del Temu
                         href="{{ url_for(
                             'catalog.catalog',
                             type=media_type,
-                            page=page + 1
+                            page=page + 1,
+                            q=search_query,
+                            genre=genre_id,
+                            sort=sort_option
                         ) }}"
                         class="pagination-button"
                     >
@@ -300,16 +497,26 @@ Catálogo — Netflix del Temu
 
     {% else %}
 
-        <section class="empty-state">
+        <section class="empty-state search-empty-state">
 
             <h2>
-                No hay contenido disponible
+                No hemos encontrado resultados
             </h2>
 
             <p>
-                No hay contenidos visibles con las
-                preferencias actuales.
+                Prueba con otro título o cambia
+                el género seleccionado.
             </p>
+
+            <a
+                href="{{ url_for(
+                    'catalog.catalog',
+                    type=media_type
+                ) }}"
+                class="search-clear-empty"
+            >
+                Ver todo el catálogo
+            </a>
 
         </section>
 

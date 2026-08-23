@@ -17,19 +17,18 @@ catalog_bp = Blueprint("catalog", __name__)
 
 ITEMS_PER_PAGE = 24
 VALID_MEDIA_TYPES = ("movie", "series")
+VALID_SORT_OPTIONS = (
+    "newest",
+    "oldest",
+    "rating",
+    "popularity",
+)
+DEFAULT_SORT = "popularity"
+MAX_SEARCH_LENGTH = 100
 
 
 def get_mature_preferences(db):
-    """
-    Obtiene el estado de la preferencia de contenido maduro.
-
-    Devuelve:
-        enabled:
-            True cuando el contenido maduro está visible.
-
-        confirmed:
-            True cuando el usuario ya confirmó ser mayor de edad.
-    """
+    """Obtiene el estado de la preferencia de contenido maduro."""
 
     row = db.execute(
         """
@@ -46,134 +45,271 @@ def get_mature_preferences(db):
     if row is None:
         return False, False
 
-    enabled = bool(
-        row["mature_content_enabled"]
-    )
-
-    confirmed = (
-        row["mature_content_confirmed_at"]
-        is not None
-    )
+    enabled = bool(row["mature_content_enabled"])
+    confirmed = row["mature_content_confirmed_at"] is not None
 
     return enabled, confirmed
 
 
-def get_content_filter(mature_enabled):
-    """
-    Devuelve la condición SQL usada por el catálogo.
-
-    general:
-        visible para cualquier cliente.
-
-    mature:
-        visible únicamente cuando el usuario lo ha activado.
-
-    explicit:
-        nunca visible en el catálogo de clientes.
-    """
+def get_content_filter(mature_enabled, alias="m"):
+    """Devuelve la condición SQL para controlar niveles visibles."""
 
     if mature_enabled:
-        return """
-            AND content_level IN (
-                'general',
-                'mature'
-            )
-        """
+        return f"{alias}.content_level IN ('general', 'mature')"
 
-    return """
-        AND content_level = 'general'
-    """
+    return f"{alias}.content_level = 'general'"
+
+
+def escape_like(value):
+    """Escapa caracteres especiales usados por LIKE."""
+
+    return (
+        value
+        .replace("\\", "\\\\")
+        .replace("%", "\\%")
+        .replace("_", "\\_")
+    )
+
+
+def get_order_by(sort_option):
+    """Devuelve una ordenación SQL permitida."""
+
+    sort_map = {
+        "newest": """
+            CASE
+                WHEN m.release_date IS NULL
+                    OR m.release_date = ''
+                THEN 2
+                WHEN m.release_date > DATE('now')
+                THEN 1
+                ELSE 0
+            END,
+            CASE
+                WHEN m.release_date <= DATE('now')
+                THEN m.release_date
+            END DESC,
+            CASE
+                WHEN m.release_date > DATE('now')
+                THEN m.release_date
+            END ASC,
+            m.popularity DESC,
+            m.title COLLATE NOCASE
+        """,
+        "oldest": """
+            CASE
+                WHEN m.release_date IS NULL
+                    OR m.release_date = ''
+                THEN 1
+                ELSE 0
+            END,
+            m.release_date ASC,
+            m.title COLLATE NOCASE
+        """,
+        "rating": """
+            CASE
+                WHEN m.tmdb_rating IS NULL
+                THEN 1
+                ELSE 0
+            END,
+            m.tmdb_rating DESC,
+            m.tmdb_vote_count DESC,
+            m.popularity DESC,
+            m.title COLLATE NOCASE
+        """,
+        "popularity": """
+            m.popularity DESC,
+            m.title COLLATE NOCASE
+        """,
+    }
+
+    return sort_map.get(
+        sort_option,
+        sort_map[DEFAULT_SORT],
+    )
+
+
+def build_catalog_filters(
+    media_type,
+    mature_enabled,
+    search_query="",
+    genre_id=None,
+):
+    """Construye filtros SQL de forma segura."""
+
+    conditions = [
+        "m.media_type = ?",
+        "m.is_visible = 1",
+        get_content_filter(mature_enabled, alias="m"),
+    ]
+
+    params = [media_type]
+
+    if search_query:
+        escaped_query = escape_like(search_query)
+        pattern = f"%{escaped_query}%"
+
+        conditions.append(
+            """
+            (
+                m.title LIKE ?
+                    ESCAPE '\\'
+                    COLLATE NOCASE
+                OR
+                COALESCE(m.original_title, '') LIKE ?
+                    ESCAPE '\\'
+                    COLLATE NOCASE
+            )
+            """
+        )
+
+        params.extend([pattern, pattern])
+
+    if genre_id is not None:
+        conditions.append(
+            """
+            EXISTS (
+                SELECT 1
+                FROM media_genres AS mg_filter
+                WHERE
+                    mg_filter.media_id = m.id
+                    AND mg_filter.genre_id = ?
+            )
+            """
+        )
+        params.append(genre_id)
+
+    return " AND ".join(conditions), params
+
+
+def get_available_genres(
+    db,
+    media_type,
+    mature_enabled,
+):
+    """Devuelve los géneros disponibles para el catálogo actual."""
+
+    content_filter = get_content_filter(
+        mature_enabled,
+        alias="m",
+    )
+
+    return db.execute(
+        f"""
+        SELECT DISTINCT
+            g.id,
+            g.name
+        FROM genres AS g
+        JOIN media_genres AS mg
+          ON mg.genre_id = g.id
+        JOIN media AS m
+          ON m.id = mg.media_id
+        WHERE
+            m.media_type = ?
+            AND m.is_visible = 1
+            AND {content_filter}
+        ORDER BY
+            g.name COLLATE NOCASE
+        """,
+        (media_type,),
+    ).fetchall()
 
 
 @catalog_bp.route("/catalog")
 @login_required
 def catalog():
-    """Muestra el catálogo paginado de películas o series."""
+    """Muestra el catálogo con búsqueda, género y ordenación."""
 
-    media_type = request.args.get(
-        "type",
-        "movie",
-    )
+    media_type = request.args.get("type", "movie")
 
     if media_type not in VALID_MEDIA_TYPES:
         media_type = "movie"
 
-    page = request.args.get(
-        "page",
-        1,
-        type=int,
-    )
+    page = request.args.get("page", 1, type=int)
 
     if page < 1:
         page = 1
 
+    search_query = request.args.get("q", "").strip()
+
+    if len(search_query) > MAX_SEARCH_LENGTH:
+        search_query = search_query[:MAX_SEARCH_LENGTH]
+
+    genre_id = request.args.get("genre", type=int)
+
+    if genre_id is not None and genre_id <= 0:
+        genre_id = None
+
+    sort_option = request.args.get("sort", DEFAULT_SORT)
+
+    if sort_option not in VALID_SORT_OPTIONS:
+        sort_option = DEFAULT_SORT
+
     db = get_db()
 
-    (
-        mature_enabled,
-        mature_confirmed,
-    ) = get_mature_preferences(db)
+    mature_enabled, mature_confirmed = get_mature_preferences(db)
 
-    content_filter = get_content_filter(
-        mature_enabled
+    where_sql, filter_params = build_catalog_filters(
+        media_type=media_type,
+        mature_enabled=mature_enabled,
+        search_query=search_query,
+        genre_id=genre_id,
     )
 
     total_items = db.execute(
         f"""
         SELECT COUNT(*)
-        FROM media
-        WHERE media_type = ?
-          AND is_visible = 1
-          {content_filter}
+        FROM media AS m
+        WHERE {where_sql}
         """,
-        (media_type,),
+        filter_params,
     ).fetchone()[0]
 
     total_pages = max(
         1,
-        (
-            total_items
-            + ITEMS_PER_PAGE
-            - 1
-        )
-        // ITEMS_PER_PAGE,
+        (total_items + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE,
     )
 
     if page > total_pages:
         page = total_pages
 
-    offset = (
-        page - 1
-    ) * ITEMS_PER_PAGE
+    offset = (page - 1) * ITEMS_PER_PAGE
+
+    order_by = get_order_by(sort_option)
 
     media_items = db.execute(
         f"""
         SELECT
-            id,
-            title,
-            release_year,
-            poster_path,
-            tmdb_rating,
-            media_type,
-            content_level,
-            certification,
-            certification_country
-        FROM media
-        WHERE media_type = ?
-          AND is_visible = 1
-          {content_filter}
+            m.id,
+            m.title,
+            m.original_title,
+            m.release_date,
+            m.release_year,
+            m.poster_path,
+            m.tmdb_rating,
+            m.tmdb_vote_count,
+            m.media_type,
+            m.content_level,
+            m.certification,
+            m.certification_country
+        FROM media AS m
+        WHERE {where_sql}
         ORDER BY
-            popularity DESC,
-            title COLLATE NOCASE
+            {order_by}
         LIMIT ?
         OFFSET ?
         """,
         (
-            media_type,
+            *filter_params,
             ITEMS_PER_PAGE,
             offset,
         ),
     ).fetchall()
+
+    genres = get_available_genres(
+        db,
+        media_type,
+        mature_enabled,
+    )
 
     return render_template(
         "catalog.html",
@@ -184,6 +320,10 @@ def catalog():
         total_items=total_items,
         mature_content_enabled=mature_enabled,
         mature_content_confirmed=mature_confirmed,
+        search_query=search_query,
+        genre_id=genre_id,
+        genres=genres,
+        sort_option=sort_option,
     )
 
 
@@ -194,22 +334,21 @@ def media_detail(media_id):
 
     db = get_db()
 
-    (
-        mature_enabled,
-        mature_confirmed,
-    ) = get_mature_preferences(db)
+    mature_enabled, mature_confirmed = get_mature_preferences(db)
 
     content_filter = get_content_filter(
-        mature_enabled
+        mature_enabled,
+        alias="m",
     )
 
     media = db.execute(
         f"""
-        SELECT *
-        FROM media
-        WHERE id = ?
-          AND is_visible = 1
-          {content_filter}
+        SELECT m.*
+        FROM media AS m
+        WHERE
+            m.id = ?
+            AND m.is_visible = 1
+            AND {content_filter}
         """,
         (media_id,),
     ).fetchone()
@@ -294,17 +433,7 @@ def media_detail(media_id):
 )
 @login_required
 def content_settings():
-    """
-    Primera confirmación para habilitar el control de contenido maduro.
-
-    La primera activación requiere:
-    - confirmar mayoría de edad;
-    - introducir la contraseña actual.
-
-    Después de esta confirmación el usuario puede utilizar el slider del
-    catálogo para activar o desactivar contenido maduro sin repetir la
-    contraseña.
-    """
+    """Primera confirmación para habilitar contenido maduro."""
 
     db = get_db()
 
@@ -326,15 +455,11 @@ def content_settings():
         abort(404)
 
     mature_confirmed = (
-        user["mature_content_confirmed_at"]
-        is not None
+        user["mature_content_confirmed_at"] is not None
     )
 
     if request.method == "POST":
-        action = request.form.get(
-            "action",
-            "",
-        )
+        action = request.form.get("action", "")
 
         if action == "confirm":
             if mature_confirmed:
@@ -342,35 +467,22 @@ def content_settings():
                     "La mayoría de edad ya está confirmada.",
                     "success",
                 )
-
                 return redirect(
-                    url_for(
-                        "catalog.content_settings"
-                    )
+                    url_for("catalog.content_settings")
                 )
 
             confirmed_adult = (
-                request.form.get(
-                    "confirm_adult"
-                )
-                == "on"
+                request.form.get("confirm_adult") == "on"
             )
-
-            password = request.form.get(
-                "password",
-                "",
-            )
+            password = request.form.get("password", "")
 
             if not confirmed_adult:
                 flash(
                     "Debes confirmar que eres mayor de 18 años.",
                     "error",
                 )
-
                 return redirect(
-                    url_for(
-                        "catalog.content_settings"
-                    )
+                    url_for("catalog.content_settings")
                 )
 
             if not password:
@@ -378,11 +490,8 @@ def content_settings():
                     "Debes introducir tu contraseña actual.",
                     "error",
                 )
-
                 return redirect(
-                    url_for(
-                        "catalog.content_settings"
-                    )
+                    url_for("catalog.content_settings")
                 )
 
             if not check_password_hash(
@@ -393,11 +502,8 @@ def content_settings():
                     "La contraseña introducida no es correcta.",
                     "error",
                 )
-
                 return redirect(
-                    url_for(
-                        "catalog.content_settings"
-                    )
+                    url_for("catalog.content_settings")
                 )
 
             db.execute(
@@ -421,20 +527,13 @@ def content_settings():
             )
 
             return redirect(
-                url_for(
-                    "catalog.catalog"
-                )
+                url_for("catalog.catalog")
             )
 
-        flash(
-            "Acción no válida.",
-            "error",
-        )
+        flash("Acción no válida.", "error")
 
         return redirect(
-            url_for(
-                "catalog.content_settings"
-            )
+            url_for("catalog.content_settings")
         )
 
     return render_template(
@@ -455,12 +554,7 @@ def content_settings():
 )
 @login_required
 def toggle_mature_content():
-    """
-    Activa o desactiva rápidamente el contenido maduro.
-
-    Solo está disponible después de que el usuario haya confirmado
-    previamente su mayoría de edad.
-    """
+    """Activa o desactiva rápidamente el contenido maduro."""
 
     db = get_db()
 
@@ -484,17 +578,11 @@ def toggle_mature_content():
             "Primero debes confirmar que eres mayor de 18 años.",
             "error",
         )
-
         return redirect(
-            url_for(
-                "catalog.content_settings"
-            )
+            url_for("catalog.content_settings")
         )
 
-    enabled = (
-        request.form.get("enabled")
-        == "1"
-    )
+    enabled = request.form.get("enabled") == "1"
 
     db.execute(
         """
@@ -520,9 +608,40 @@ def toggle_mature_content():
     if media_type not in VALID_MEDIA_TYPES:
         media_type = "movie"
 
+    search_query = request.form.get(
+        "q",
+        "",
+    ).strip()
+
+    genre_id = request.form.get(
+        "genre",
+        type=int,
+    )
+
+    sort_option = request.form.get(
+        "sort",
+        DEFAULT_SORT,
+    )
+
+    if sort_option not in VALID_SORT_OPTIONS:
+        sort_option = DEFAULT_SORT
+
+    redirect_args = {
+        "type": media_type,
+        "sort": sort_option,
+    }
+
+    if search_query:
+        redirect_args["q"] = (
+            search_query[:MAX_SEARCH_LENGTH]
+        )
+
+    if genre_id is not None and genre_id > 0:
+        redirect_args["genre"] = genre_id
+
     return redirect(
         url_for(
             "catalog.catalog",
-            type=media_type,
+            **redirect_args,
         )
     )
