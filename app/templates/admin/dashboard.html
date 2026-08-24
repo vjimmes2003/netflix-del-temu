@@ -118,9 +118,11 @@ Administración — Netflix del Temu
         </a>
 
 
-        <article
-            class="admin-module-card
-                   admin-module-disabled"
+        <a
+            href="{{ url_for(
+                'admin.media_catalog'
+            ) }}"
+            class="admin-module-card"
         >
             <span class="admin-module-icon">
                 C
@@ -132,14 +134,15 @@ Administración — Netflix del Temu
                 </h2>
 
                 <p>
-                    Gestión de películas y series.
+                    Crear, editar, eliminar
+                    y restaurar películas y series.
                 </p>
-
-                <small>
-                    Disponible en la Fase 9
-                </small>
             </div>
-        </article>
+
+            <span class="admin-module-arrow">
+                →
+            </span>
+        </a>
 
     </section>
 

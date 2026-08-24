@@ -1,0 +1,555 @@
+{% extends "base.html" %}
+
+{% block title %}
+Catálogo — Administración
+{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/admin_users.css'
+    ) }}"
+>
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/admin_catalog.css'
+    ) }}"
+>
+
+<main class="admin-page">
+
+    <section class="admin-heading">
+
+        <div>
+
+            <a
+                href="{{ url_for(
+                    'admin.dashboard'
+                ) }}"
+                class="admin-back-link"
+            >
+                ← Panel de administración
+            </a>
+
+            <p class="eyebrow">
+                ADMINISTRACIÓN
+            </p>
+
+            <h1>
+                Catálogo
+            </h1>
+
+            <p>
+                Gestión de películas y series.
+            </p>
+
+        </div>
+
+        <a
+            href="{{ url_for(
+                'admin.create_media'
+            ) }}"
+            class="admin-primary-button"
+        >
+            + Crear contenido
+        </a>
+
+    </section>
+
+
+    {% with messages = get_flashed_messages(
+        with_categories=true
+    ) %}
+
+        {% if messages %}
+
+            <section class="admin-messages">
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="admin-message
+                        admin-message-{{ category }}"
+                    >
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </section>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <section class="admin-media-stats">
+
+        <article>
+            <span>Total</span>
+            <strong>{{ stats["total"] or 0 }}</strong>
+        </article>
+
+        <article>
+            <span>Películas</span>
+            <strong>{{ stats["movies"] or 0 }}</strong>
+        </article>
+
+        <article>
+            <span>Series</span>
+            <strong>{{ stats["series"] or 0 }}</strong>
+        </article>
+
+        <article>
+            <span>Ocultos</span>
+            <strong>{{ stats["hidden"] or 0 }}</strong>
+        </article>
+
+    </section>
+
+
+    <form
+        method="get"
+        class="admin-media-filters"
+    >
+
+        <label>
+            <span>Buscar</span>
+
+            <input
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                placeholder="Título..."
+                maxlength="100"
+            >
+        </label>
+
+
+        <label>
+            <span>Tipo</span>
+
+            <select name="type">
+                <option
+                    value="all"
+                    {% if media_type == "all" %}
+                        selected
+                    {% endif %}
+                >
+                    Todos
+                </option>
+
+                <option
+                    value="movie"
+                    {% if media_type == "movie" %}
+                        selected
+                    {% endif %}
+                >
+                    Películas
+                </option>
+
+                <option
+                    value="series"
+                    {% if media_type == "series" %}
+                        selected
+                    {% endif %}
+                >
+                    Series
+                </option>
+            </select>
+        </label>
+
+
+        <label>
+            <span>Estado</span>
+
+            <select name="visibility">
+                <option
+                    value="all"
+                    {% if visibility == "all" %}
+                        selected
+                    {% endif %}
+                >
+                    Todos
+                </option>
+
+                <option
+                    value="visible"
+                    {% if visibility == "visible" %}
+                        selected
+                    {% endif %}
+                >
+                    Visibles
+                </option>
+
+                <option
+                    value="hidden"
+                    {% if visibility == "hidden" %}
+                        selected
+                    {% endif %}
+                >
+                    Eliminados
+                </option>
+            </select>
+        </label>
+
+
+        <label>
+            <span>Origen</span>
+
+            <select name="source">
+                <option
+                    value="all"
+                    {% if source == "all" %}
+                        selected
+                    {% endif %}
+                >
+                    Todos
+                </option>
+
+                <option
+                    value="tmdb"
+                    {% if source == "tmdb" %}
+                        selected
+                    {% endif %}
+                >
+                    TMDB
+                </option>
+
+                <option
+                    value="manual"
+                    {% if source == "manual" %}
+                        selected
+                    {% endif %}
+                >
+                    Manual
+                </option>
+            </select>
+        </label>
+
+
+        <label>
+            <span>Clasificación</span>
+
+            <select name="content_level">
+                <option
+                    value="all"
+                    {% if content_level == "all" %}
+                        selected
+                    {% endif %}
+                >
+                    Todas
+                </option>
+
+                <option
+                    value="general"
+                    {% if content_level == "general" %}
+                        selected
+                    {% endif %}
+                >
+                    General
+                </option>
+
+                <option
+                    value="mature"
+                    {% if content_level == "mature" %}
+                        selected
+                    {% endif %}
+                >
+                    Mature
+                </option>
+
+                <option
+                    value="explicit"
+                    {% if content_level == "explicit" %}
+                        selected
+                    {% endif %}
+                >
+                    Explicit
+                </option>
+            </select>
+        </label>
+
+
+        <div class="admin-media-filter-actions">
+
+            <button
+                type="submit"
+                class="admin-primary-button"
+            >
+                Aplicar
+            </button>
+
+            <a
+                href="{{ url_for(
+                    'admin.media_catalog'
+                ) }}"
+                class="admin-secondary-link"
+            >
+                Limpiar
+            </a>
+
+        </div>
+
+    </form>
+
+
+    <p class="admin-media-result-count">
+        {{ total_items }}
+        resultado{% if total_items != 1 %}s{% endif %}
+    </p>
+
+
+    <section class="admin-table-card">
+
+        <div class="admin-table-scroll">
+
+            <table
+                class="admin-table
+                       admin-media-table"
+            >
+
+                <thead>
+                    <tr>
+                        <th>Contenido</th>
+                        <th>Tipo</th>
+                        <th>Año</th>
+                        <th>Géneros</th>
+                        <th>Nivel</th>
+                        <th>Origen</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for item in items %}
+
+                        <tr
+                            {% if not item["is_visible"] %}
+                                class="admin-row-inactive"
+                            {% endif %}
+                        >
+
+                            <td class="admin-media-title-cell">
+
+                                {% if item["poster_path"] %}
+
+                                    <img
+                                        src="{{
+                                            item['poster_path']
+                                            | tmdb_image('w92')
+                                        }}"
+                                        alt=""
+                                    >
+
+                                {% else %}
+
+                                    <div class="admin-media-poster-empty">
+                                        —
+                                    </div>
+
+                                {% endif %}
+
+                                <div>
+                                    <strong>
+                                        {{ item["title"] }}
+                                    </strong>
+
+                                    {% if item["original_title"] %}
+                                        <small>
+                                            {{ item["original_title"] }}
+                                        </small>
+                                    {% endif %}
+
+                                    <small>
+                                        ID local:
+                                        {{ item["id"] }}
+
+                                        {% if item["tmdb_id"] %}
+                                            · TMDB:
+                                            {{ item["tmdb_id"] }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+
+                            </td>
+
+                            <td>
+                                {% if item["media_type"] == "movie" %}
+                                    Película
+                                {% else %}
+                                    Serie
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ item["release_year"] or "—" }}
+                            </td>
+
+                            <td class="admin-media-genres">
+                                {{ item["genres"] or "Sin género" }}
+                            </td>
+
+                            <td>
+                                <span
+                                    class="admin-content-level
+                                    admin-content-level-{{
+                                        item['content_level']
+                                    }}"
+                                >
+                                    {{ item["content_level"] }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {% if item["source"] == "tmdb" %}
+                                    <span class="admin-source-badge">
+                                        TMDB
+                                    </span>
+                                {% else %}
+                                    <span
+                                        class="admin-source-badge
+                                               admin-source-manual"
+                                    >
+                                        Manual
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if item["is_visible"] %}
+                                    <span
+                                        class="admin-status
+                                               admin-status-active"
+                                    >
+                                        Visible
+                                    </span>
+                                {% else %}
+                                    <span
+                                        class="admin-status
+                                               admin-status-inactive"
+                                    >
+                                        Eliminado
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <div class="admin-row-actions">
+
+                                    <a
+                                        href="{{ url_for(
+                                            'admin.edit_media',
+                                            media_id=item['id']
+                                        ) }}"
+                                    >
+                                        Editar
+                                    </a>
+
+                                    <form
+                                        method="post"
+                                        action="{{ url_for(
+                                            'admin.toggle_media_visible',
+                                            media_id=item['id']
+                                        ) }}"
+                                    >
+                                        <button
+                                            type="submit"
+                                            class="
+                                            {% if item['is_visible'] %}
+                                                danger
+                                            {% else %}
+                                                success
+                                            {% endif %}"
+                                        >
+                                            {% if item["is_visible"] %}
+                                                Eliminar
+                                            {% else %}
+                                                Restaurar
+                                            {% endif %}
+                                        </button>
+                                    </form>
+
+                                </div>
+                            </td>
+
+                        </tr>
+
+                    {% else %}
+
+                        <tr>
+                            <td
+                                colspan="8"
+                                class="admin-empty-cell"
+                            >
+                                No hay contenidos que coincidan.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+    {% if total_pages > 1 %}
+
+        <nav class="admin-media-pagination">
+
+            {% if page > 1 %}
+                <a
+                    href="{{ url_for(
+                        'admin.media_catalog',
+                        page=page - 1,
+                        q=search_query,
+                        type=media_type,
+                        visibility=visibility,
+                        source=source,
+                        content_level=content_level
+                    ) }}"
+                >
+                    ← Anterior
+                </a>
+            {% endif %}
+
+            <span>
+                Página {{ page }}
+                de {{ total_pages }}
+            </span>
+
+            {% if page < total_pages %}
+                <a
+                    href="{{ url_for(
+                        'admin.media_catalog',
+                        page=page + 1,
+                        q=search_query,
+                        type=media_type,
+                        visibility=visibility,
+                        source=source,
+                        content_level=content_level
+                    ) }}"
+                >
+                    Siguiente →
+                </a>
+            {% endif %}
+
+        </nav>
+
+    {% endif %}
+
+</main>
+
+{% endblock %}

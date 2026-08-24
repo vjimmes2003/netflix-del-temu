@@ -1,0 +1,336 @@
+/* FASE 9 — CRUD ADMINISTRATIVO DEL CATÁLOGO */
+
+.admin-media-stats {
+    display: grid;
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.admin-media-stats article {
+    padding: 15px;
+    border: 1px solid #353d52;
+    border-radius: 10px;
+    background: #1b2133;
+}
+
+.admin-media-stats span {
+    display: block;
+    color: #8791a5;
+    font-size: .72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.admin-media-stats strong {
+    display: block;
+    margin-top: 4px;
+    font-size: 1.45rem;
+}
+
+.admin-media-filters {
+    display: grid;
+    grid-template-columns:
+        minmax(200px, 1.7fr)
+        repeat(3, minmax(120px, .7fr))
+        auto;
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 16px;
+    padding: 16px;
+    border: 1px solid #353d52;
+    border-radius: 11px;
+    background: #1b2133;
+}
+
+.admin-media-filters label {
+    display: grid;
+    gap: 6px;
+}
+
+.admin-media-filters label > span {
+    color: #8e97aa;
+    font-size: .72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.admin-media-filters input,
+.admin-media-filters select,
+.admin-media-form input,
+.admin-media-form select,
+.admin-media-form textarea {
+    width: 100%;
+    min-height: 42px;
+    box-sizing: border-box;
+    padding: 9px 10px;
+    border: 1px solid #3e465c;
+    border-radius: 8px;
+    outline: none;
+    background: #151a29;
+    color: #e2e4e9;
+    font: inherit;
+}
+
+.admin-media-form textarea {
+    resize: vertical;
+}
+
+.admin-media-filters input:focus,
+.admin-media-filters select:focus,
+.admin-media-form input:focus,
+.admin-media-form select:focus,
+.admin-media-form textarea:focus {
+    border-color: #785ac2;
+}
+
+.admin-media-filter-actions {
+    display: flex;
+    gap: 7px;
+}
+
+.admin-media-result-count {
+    color: #7f899d;
+    font-size: .85rem;
+}
+
+.admin-media-table {
+    min-width: 1180px;
+}
+
+.admin-media-title-cell {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 240px;
+}
+
+.admin-media-title-cell img,
+.admin-media-poster-empty {
+    width: 42px;
+    height: 62px;
+    flex: 0 0 auto;
+    border-radius: 5px;
+    object-fit: cover;
+    background: #272e42;
+}
+
+.admin-media-poster-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6f788b;
+}
+
+.admin-media-genres {
+    max-width: 230px;
+    color: #9ba3b3 !important;
+    line-height: 1.4;
+}
+
+.admin-source-badge,
+.admin-content-level {
+    display: inline-flex;
+    padding: 4px 7px;
+    border-radius: 999px;
+    font-size: .68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.admin-source-badge {
+    background: #273448;
+    color: #9fc2e7;
+}
+
+.admin-source-manual {
+    background: #352d45;
+    color: #c4b0e8;
+}
+
+.admin-content-level-general {
+    background: #213628;
+    color: #a9d4b4;
+}
+
+.admin-content-level-mature {
+    background: #493a24;
+    color: #e3c58f;
+}
+
+.admin-content-level-explicit {
+    background: #44252d;
+    color: #e0abb8;
+}
+
+.admin-media-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 20px;
+}
+
+.admin-media-pagination a {
+    color: #bcaaf5;
+    text-decoration: none;
+}
+
+.admin-media-pagination span {
+    color: #8992a4;
+    font-size: .85rem;
+}
+
+
+/* FORMULARIO */
+
+.admin-media-form-shell {
+    width: min(980px, 100%);
+    margin: 0 auto;
+}
+
+.admin-media-origin-info {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin: 18px 0;
+    padding: 12px 14px;
+    border: 1px solid #353d52;
+    border-radius: 9px;
+    background: #1b2133;
+    color: #919bad;
+    font-size: .8rem;
+}
+
+.admin-media-origin-info strong {
+    color: #d2d6df;
+}
+
+.admin-media-form {
+    display: grid;
+    gap: 18px;
+    margin-top: 22px;
+}
+
+.admin-media-form-section {
+    padding: 20px;
+    border: 1px solid #353d52;
+    border-radius: 12px;
+    background: #1b2133;
+}
+
+.admin-media-form-section h2 {
+    margin: 0 0 15px;
+    font-size: 1rem;
+}
+
+.admin-media-form-section > p {
+    margin: -6px 0 16px;
+    color: #8992a4;
+    line-height: 1.45;
+}
+
+.admin-media-form .admin-field {
+    display: grid;
+    gap: 7px;
+}
+
+.admin-media-form .admin-field > span {
+    color: #cdd1da;
+    font-size: .82rem;
+    font-weight: 750;
+}
+
+.admin-media-form .admin-field small {
+    color: #747e91;
+    line-height: 1.4;
+}
+
+.admin-genre-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.admin-genre-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 38px;
+    padding: 7px 9px;
+    border: 1px solid #343c50;
+    border-radius: 7px;
+    background: #171c2b;
+    color: #aeb5c3;
+    font-size: .8rem;
+}
+
+.admin-genre-option input {
+    width: auto;
+    min-height: auto;
+    accent-color: #7d55d7;
+}
+
+.admin-series-summary {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.admin-series-summary article {
+    padding: 13px;
+    border: 1px solid #343c50;
+    border-radius: 8px;
+    background: #171c2b;
+}
+
+.admin-series-summary span {
+    display: block;
+    color: #7e879a;
+    font-size: .72rem;
+    text-transform: uppercase;
+}
+
+.admin-series-summary strong {
+    display: block;
+    margin-top: 5px;
+}
+
+.admin-media-note {
+    margin-top: 13px !important;
+    color: #788295 !important;
+    font-size: .8rem;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 900px) {
+    .admin-media-stats,
+    .admin-genre-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-media-filters {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-media-filter-actions {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 620px) {
+    .admin-media-stats,
+    .admin-media-filters,
+    .admin-genre-grid,
+    .admin-series-summary {
+        grid-template-columns: 1fr;
+    }
+}

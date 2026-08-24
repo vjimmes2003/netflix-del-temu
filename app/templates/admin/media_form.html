@@ -1,0 +1,638 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ page_title }} — Administración
+{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/admin_users.css'
+    ) }}"
+>
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/admin_catalog.css'
+    ) }}"
+>
+
+<main class="admin-page">
+
+    <section class="admin-media-form-shell">
+
+        <a
+            href="{{ url_for(
+                'admin.media_catalog'
+            ) }}"
+            class="admin-back-link"
+        >
+            ← Volver al catálogo
+        </a>
+
+        <p class="eyebrow">
+            ADMINISTRACIÓN
+        </p>
+
+        <h1>
+            {{ page_title }}
+        </h1>
+
+        {% if form_mode == "create" %}
+            <p>
+                Crea una película o serie manualmente.
+            </p>
+        {% else %}
+            <p>
+                Modifica los datos locales del contenido.
+            </p>
+        {% endif %}
+
+
+        {% with messages = get_flashed_messages(
+            with_categories=true
+        ) %}
+
+            {% if messages %}
+
+                <div class="admin-messages">
+
+                    {% for category, message in messages %}
+
+                        <div
+                            class="admin-message
+                            admin-message-{{ category }}"
+                        >
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        {% endwith %}
+
+
+        {% if form_mode == "edit" and media %}
+
+            <section class="admin-media-origin-info">
+
+                <span>
+                    Origen:
+                    <strong>
+                        {{ media["source"] }}
+                    </strong>
+                </span>
+
+                <span>
+                    ID local:
+                    <strong>
+                        {{ media["id"] }}
+                    </strong>
+                </span>
+
+                {% if media["tmdb_id"] %}
+                    <span>
+                        TMDB:
+                        <strong>
+                            {{ media["tmdb_id"] }}
+                        </strong>
+                    </span>
+                {% endif %}
+
+            </section>
+
+        {% endif %}
+
+
+        <form
+            method="post"
+            class="admin-media-form"
+        >
+
+            <section class="admin-media-form-section">
+
+                <h2>
+                    Información principal
+                </h2>
+
+                <div class="admin-form-grid">
+
+                    <label class="admin-field">
+
+                        <span>Tipo</span>
+
+                        <select
+                            name="media_type"
+                            id="media_type"
+                            {% if form_mode == "edit" %}
+                                disabled
+                            {% endif %}
+                        >
+                            <option
+                                value="movie"
+                                {% if form_data["media_type"] == "movie" %}
+                                    selected
+                                {% endif %}
+                            >
+                                Película
+                            </option>
+
+                            <option
+                                value="series"
+                                {% if form_data["media_type"] == "series" %}
+                                    selected
+                                {% endif %}
+                            >
+                                Serie
+                            </option>
+                        </select>
+
+                        {% if form_mode == "edit" %}
+                            <input
+                                type="hidden"
+                                name="media_type"
+                                value="{{ form_data['media_type'] }}"
+                            >
+
+                            <small>
+                                El tipo no se cambia después de crear
+                                para proteger temporadas y actividad.
+                            </small>
+                        {% endif %}
+
+                    </label>
+
+
+                    <label class="admin-field">
+
+                        <span>Título</span>
+
+                        <input
+                            type="text"
+                            name="title"
+                            value="{{ form_data['title'] }}"
+                            maxlength="255"
+                            required
+                        >
+
+                    </label>
+
+
+                    <label class="admin-field">
+
+                        <span>Título original</span>
+
+                        <input
+                            type="text"
+                            name="original_title"
+                            value="{{ form_data['original_title'] }}"
+                            maxlength="255"
+                        >
+
+                    </label>
+
+
+                    <label class="admin-field">
+
+                        <span>Fecha de estreno</span>
+
+                        <input
+                            type="date"
+                            name="release_date"
+                            value="{{ form_data['release_date'] }}"
+                        >
+
+                    </label>
+
+
+                    <label
+                        class="admin-field"
+                        id="movie-runtime-field"
+                    >
+
+                        <span>Duración película</span>
+
+                        <input
+                            type="number"
+                            name="runtime_minutes"
+                            value="{{ form_data['runtime_minutes'] }}"
+                            min="1"
+                            max="1000"
+                        >
+
+                        <small>
+                            Minutos. Obligatorio para películas.
+                        </small>
+
+                    </label>
+
+
+                    <label class="admin-field">
+
+                        <span>Idioma original</span>
+
+                        <input
+                            type="text"
+                            name="original_language"
+                            value="{{ form_data['original_language'] }}"
+                            maxlength="10"
+                            placeholder="es"
+                        >
+
+                    </label>
+
+
+                    <label
+                        class="admin-field
+                               admin-field-wide"
+                    >
+
+                        <span>Sinopsis</span>
+
+                        <textarea
+                            name="overview"
+                            rows="6"
+                        >{{ form_data["overview"] }}</textarea>
+
+                    </label>
+
+                </div>
+
+            </section>
+
+
+            <section class="admin-media-form-section">
+
+                <h2>
+                    Portada y clasificación
+                </h2>
+
+                <div class="admin-form-grid">
+
+                    <label class="admin-field">
+
+                        <span>Ruta de portada</span>
+
+                        <input
+                            type="text"
+                            name="poster_path"
+                            value="{{ form_data['poster_path'] }}"
+                            placeholder="/imagen.jpg"
+                        >
+
+                        <small>
+                            Ruta de imagen compatible con TMDB.
+                            Puede dejarse vacía.
+                        </small>
+
+                    </label>
+
+
+                    <label class="admin-field">
+
+                        <span>Ruta de fondo</span>
+
+                        <input
+                            type="text"
+                            name="backdrop_path"
+                            value="{{ form_data['backdrop_path'] }}"
+                            placeholder="/fondo.jpg"
+                        >
+
+                    </label>
+
+
+                    <label class="admin-field">
+
+                        <span>Nivel de contenido</span>
+
+                        <select name="content_level">
+
+                            <option
+                                value="general"
+                                {% if form_data["content_level"] == "general" %}
+                                    selected
+                                {% endif %}
+                            >
+                                General
+                            </option>
+
+                            <option
+                                value="mature"
+                                {% if form_data["content_level"] == "mature" %}
+                                    selected
+                                {% endif %}
+                            >
+                                Maduro
+                            </option>
+
+                            <option
+                                value="explicit"
+                                {% if form_data["content_level"] == "explicit" %}
+                                    selected
+                                {% endif %}
+                            >
+                                Explícito
+                            </option>
+
+                        </select>
+
+                    </label>
+
+
+                    <label class="admin-field">
+
+                        <span>Certificación</span>
+
+                        <input
+                            type="text"
+                            name="certification"
+                            value="{{ form_data['certification'] }}"
+                            maxlength="20"
+                            placeholder="16, 18, TV-MA..."
+                        >
+
+                    </label>
+
+
+                    <label class="admin-field">
+
+                        <span>País certificación</span>
+
+                        <input
+                            type="text"
+                            name="certification_country"
+                            value="{{ form_data['certification_country'] }}"
+                            minlength="2"
+                            maxlength="2"
+                            placeholder="ES"
+                        >
+
+                    </label>
+
+
+                    <label
+                        class="admin-field
+                               admin-field-wide"
+                    >
+
+                        <span>Motivo de clasificación</span>
+
+                        <input
+                            type="text"
+                            name="content_reason"
+                            value="{{ form_data['content_reason'] }}"
+                            maxlength="255"
+                            placeholder="Opcional"
+                        >
+
+                    </label>
+
+                </div>
+
+            </section>
+
+
+            <section class="admin-media-form-section">
+
+                <h2>
+                    Géneros / categorías
+                </h2>
+
+                <div class="admin-genre-grid">
+
+                    {% for genre in genres %}
+
+                        <label class="admin-genre-option">
+
+                            <input
+                                type="checkbox"
+                                name="genre_ids"
+                                value="{{ genre['id'] }}"
+                                {% if genre["id"] in selected_genres %}
+                                    checked
+                                {% endif %}
+                            >
+
+                            <span>
+                                {{ genre["name"] }}
+                            </span>
+
+                        </label>
+
+                    {% endfor %}
+
+                </div>
+
+            </section>
+
+
+            {% if form_mode == "create" %}
+
+                <section
+                    class="admin-media-form-section
+                           admin-series-structure"
+                    id="series-structure"
+                >
+
+                    <h2>
+                        Estructura rápida de serie
+                    </h2>
+
+                    <p>
+                        Opcional. Si rellenas estos campos,
+                        se crearán automáticamente temporadas
+                        y episodios genéricos editables en la
+                        base de datos.
+                    </p>
+
+                    <div class="admin-form-grid">
+
+                        <label class="admin-field">
+
+                            <span>Número de temporadas</span>
+
+                            <input
+                                type="number"
+                                name="season_count"
+                                value="{{ form_data['season_count'] }}"
+                                min="1"
+                                max="50"
+                            >
+
+                        </label>
+
+
+                        <label class="admin-field">
+
+                            <span>Episodios por temporada</span>
+
+                            <input
+                                type="number"
+                                name="episodes_per_season"
+                                value="{{
+                                    form_data['episodes_per_season']
+                                }}"
+                                min="1"
+                                max="100"
+                            >
+
+                        </label>
+
+
+                        <label class="admin-field">
+
+                            <span>Duración de episodio</span>
+
+                            <input
+                                type="number"
+                                name="episode_runtime_minutes"
+                                value="{{
+                                    form_data[
+                                        'episode_runtime_minutes'
+                                    ]
+                                }}"
+                                min="1"
+                                max="600"
+                            >
+
+                            <small>
+                                Duración en minutos.
+                            </small>
+
+                        </label>
+
+                    </div>
+
+                </section>
+
+            {% elif media and media["media_type"] == "series" %}
+
+                <section class="admin-media-form-section">
+
+                    <h2>
+                        Estructura actual
+                    </h2>
+
+                    <div class="admin-series-summary">
+
+                        <article>
+                            <span>Temporadas</span>
+                            <strong>
+                                {{ series_stats["seasons"] or 0 }}
+                            </strong>
+                        </article>
+
+                        <article>
+                            <span>Episodios</span>
+                            <strong>
+                                {{ series_stats["episodes"] or 0 }}
+                            </strong>
+                        </article>
+
+                        <article>
+                            <span>Duración media</span>
+                            <strong>
+                                {% if series_stats["average_runtime"] %}
+                                    {{
+                                        series_stats[
+                                            "average_runtime"
+                                        ]
+                                    }}
+                                    min
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </strong>
+                        </article>
+
+                    </div>
+
+                    <p class="admin-media-note">
+                        En esta fase la edición modifica la ficha
+                        de la serie sin reconstruir temporadas ya
+                        existentes, evitando perder progreso.
+                    </p>
+
+                </section>
+
+            {% endif %}
+
+
+            <div class="admin-form-actions">
+
+                <button
+                    type="submit"
+                    class="admin-primary-button"
+                >
+                    {% if form_mode == "create" %}
+                        Crear contenido
+                    {% else %}
+                        Guardar cambios
+                    {% endif %}
+                </button>
+
+                <a
+                    href="{{ url_for(
+                        'admin.media_catalog'
+                    ) }}"
+                    class="admin-secondary-link"
+                >
+                    Cancelar
+                </a>
+
+            </div>
+
+        </form>
+
+    </section>
+
+</main>
+
+
+<script>
+(function () {
+    const typeSelect = document.getElementById("media_type");
+    const seriesStructure = document.getElementById("series-structure");
+    const movieRuntime = document.getElementById("movie-runtime-field");
+
+    if (!typeSelect) {
+        return;
+    }
+
+    function updateFields() {
+        const isSeries = typeSelect.value === "series";
+
+        if (seriesStructure) {
+            seriesStructure.hidden = !isSeries;
+        }
+
+        if (movieRuntime) {
+            movieRuntime.hidden = isSeries;
+
+            const input = movieRuntime.querySelector("input");
+
+            if (input) {
+                input.required = !isSeries;
+            }
+        }
+    }
+
+    typeSelect.addEventListener(
+        "change",
+        updateFields
+    );
+
+    updateFields();
+})();
+</script>
+
+{% endblock %}
