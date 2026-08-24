@@ -1005,6 +1005,104 @@ refactor: modernize and consolidate application design
 ---
 
 
+
+# Fase 13 — Pruebas finales
+## Objetivo
+Validar de forma reproducible toda la aplicación antes de congelar el desarrollo y pasar a la documentación de entrega y defensa.
+
+## Batería automática
+Se añadió:
+```text
+scripts/run_phase13_tests.py
+```
+
+El script trabaja sobre una copia temporal de `instance/netflix_del_temu.sqlite3`, por lo que las pruebas no modifican la base real.
+
+Ejecución:
+```powershell
+python scripts/run_phase13_tests.py
+```
+
+Se comprobaron 29 grupos:
+- compilación Python, Jinja y assets;
+- integridad SQLite y 16 tablas;
+- mapa de rutas, autenticación y errores;
+- registro, duplicados, login, suspensión y logout;
+- permisos cliente/administrador;
+- catálogo, búsqueda, ordenación y paginación 10/30/50/100;
+- entradas SQL/XSS básicas y valores inválidos;
+- películas, series, temporadas y episodios;
+- política `general/mature/explicit`;
+- favoritos, vistos y progreso;
+- perfil y estadísticas;
+- CRUD de usuarios y catálogo;
+- creación manual, soft delete y restauración;
+- filtros/estadísticas administrativas;
+- generador de 100 usuarios demo;
+- integridad SQLite final.
+
+## Resultado
+```text
+PASS: 29
+FAIL: 0
+SKIP: 0
+
+100 usuarios demo
+3.322 registros de películas
+7.877 registros de episodios
+```
+
+`/admin/statistics` respondió correctamente con la carga demo y SQLite mantuvo integridad `ok`.
+
+Informe:
+```text
+documentation/sources/FASE13_TEST_RESULTS.txt
+```
+
+## Revisión visual
+Con Chrome DevTools se verificó:
+- Chart.js renderizado;
+- consola sin errores JavaScript;
+- posters y fondos cargados;
+- navegación y controles operativos;
+- ausencia de overflow horizontal;
+- adaptación responsive.
+
+El catálogo se revisó aproximadamente a 956 px, 690 px y 304 px. La navegación pasa a menú compacto y los filtros/tarjetas se reorganizan correctamente.
+
+## Favicon
+DevTools detectó inicialmente un único `404` de `/favicon.ico`. Se añadió el favicon a los assets estáticos y su referencia en `base.html`; tras recargar, la consola quedó limpia.
+
+## Evidencias
+```text
+documentation/screenshots/fase13_01_resultado_testing_consola.png
+documentation/screenshots/fase13_02_devtools.png
+documentation/screenshots/fase13_03_responsive_1.png
+documentation/screenshots/fase13_04_responsive_2.png
+documentation/screenshots/fase13_05_responsive_3.png
+```
+
+## Validación final
+- 29/29 grupos superados;
+- cero fallos y cero omisiones;
+- base real protegida;
+- integridad SQLite correcta antes y después;
+- permisos, contenido, CRUD y actividad operativos;
+- estadísticas válidas con carga elevada;
+- consola limpia;
+- responsive comprobado.
+
+## Cierre técnico
+Con esta fase quedan terminadas las funcionalidades y pruebas. A partir de aquí solo se realizarán correcciones críticas; el trabajo restante es documentación, guía completa del proyecto y preparación de la defensa.
+
+## Commit
+```text
+test: add final automated and responsive validation
+```
+**Estado: completada.**
+
+---
+
 # Fuentes técnicas
 
 - Flask: https://flask.palletsprojects.com/
