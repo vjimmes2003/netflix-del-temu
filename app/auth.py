@@ -244,8 +244,8 @@ def login():
                 role,
                 is_active
             FROM users
-            WHERE username = ?
-               OR email = ?
+            WHERE username = ? COLLATE NOCASE
+               OR email = ? COLLATE NOCASE
             LIMIT 1
             """,
             (
@@ -357,6 +357,10 @@ def register():
             "password",
             "",
         )
+        password_confirmation = request.form.get(
+            "password_confirmation",
+            "",
+        )
 
         errors = []
 
@@ -408,6 +412,11 @@ def register():
             errors.append(
                 "La contraseña debe tener al menos "
                 f"{PASSWORD_MIN_LENGTH} caracteres."
+            )
+
+        if password != password_confirmation:
+            errors.append(
+                "Las contraseñas no coinciden."
             )
 
         db = get_db()

@@ -6,21 +6,6 @@ Estadísticas — Administración
 
 {% block content %}
 
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/admin_users.css'
-    ) }}"
->
-
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/admin_statistics.css'
-    ) }}"
->
 
 <main class="admin-page admin-statistics-page">
 
@@ -139,7 +124,7 @@ Estadísticas — Administración
 
             {% if chart_data["clients"]["labels"] %}
                 <div class="admin-chart admin-client-chart">
-                    <canvas id="adminClientChart"></canvas>
+                    <canvas id="adminClientChart" role="img" aria-label="Comparación del tiempo registrado por cliente"></canvas>
                 </div>
             {% else %}
                 <div class="admin-statistics-empty">
@@ -161,7 +146,7 @@ Estadísticas — Administración
 
             {% if chart_data["monthly"]["labels"] %}
                 <div class="admin-chart admin-monthly-chart">
-                    <canvas id="adminMonthlyChart"></canvas>
+                    <canvas id="adminMonthlyChart" role="img" aria-label="Actividad global mensual de películas y episodios"></canvas>
                 </div>
             {% else %}
                 <div class="admin-statistics-empty">
@@ -372,15 +357,14 @@ Estadísticas — Administración
 
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block vendor_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block page_data %}
 <script>
     window.adminStatisticsData = {{ chart_data | tojson }};
 </script>
-<script
-    src="{{ url_for(
-        'static',
-        filename='js/admin_statistics.js'
-    ) }}"
-></script>
-
 {% endblock %}

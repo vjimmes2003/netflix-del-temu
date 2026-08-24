@@ -909,6 +909,102 @@ feat: add admin statistics and demo activity generator
 
 ---
 
+
+# Fase 12 — Rediseño global y UX
+## Objetivo
+Modernizar toda la interfaz, aprovechar mejor pantallas de escritorio y unificar el frontend sin alterar la funcionalidad existente.
+
+## Implementación
+Se rehízo la capa visual con Bootstrap 5.3.8, Bootstrap Icons y componentes propios.
+
+Paleta semántica:
+```text
+violeta → marca/películas
+azul    → series
+cian    → actividad/estadísticas
+coral   → favoritos
+ámbar   → rating/mature
+verde   → completado/correcto
+```
+
+Grid y Flexbox organizan los layouts de escritorio y Bootstrap junto a media queries propias mantiene el comportamiento responsive.
+La navegación global quedó en Películas, Series, Perfil, Administración y Usuario. `Perfil` aparece una sola vez; las pestañas del catálogo son Películas, Series, Favoritos y Vistos.
+
+## Catálogo y biblioteca
+Se rediseñaron catálogo, fichas, temporadas, Favoritos y Vistos con:
+- hero destacado;
+- tarjetas con poster, rating, tipo y clasificación;
+- filtros compactos y conservación durante la paginación;
+- selector de 10, 30, 50 o 100 resultados;
+- badges `mature` cuando corresponde.
+
+## Perfil y estadísticas
+El perfil aprovecha mejor el ancho de escritorio y presenta sus métricas mediante tarjetas.
+Chart.js mantiene los cálculos existentes y mejora distribución, colores, responsive, accesibilidad de los `canvas` y animaciones compatibles con `prefers-reduced-motion`.
+
+## Administración
+La administración conserva la identidad visual, pero usa mayor densidad de información.
+El catálogo administrativo utiliza una tabla compacta, los formularios se uniformaron y las estadísticas recibieron márgenes, colores semánticos y una presentación más clara.
+
+## Datos demo
+`scripts/generate_demo_users.py` genera 100 clientes demo por defecto, con perfiles variados y actividad reproducible durante seis meses.
+```powershell
+python scripts/generate_demo_users.py
+python scripts/generate_demo_users.py --count 50
+python scripts/generate_demo_users.py --clean
+```
+Admite entre 1 y 500 usuarios. La limpieza solo afecta a cuentas `demo_`.
+
+## Simplificación
+Se retiraron los CSS/JS específicos acumulados en fases anteriores.
+
+Frontend final:
+```text
+app/static/css/app.css
+app/static/js/app.js
+```
+
+Snapshot final:
+```text
+40 archivos
+16.868 líneas aprox.
+19 Python · 19 HTML · 1 CSS · 1 JavaScript
+```
+
+## Evidencias
+```text
+documentation/screenshots/fase12_01_landing_publica.png
+documentation/screenshots/fase12_02_catalogo_peliculas.png
+documentation/screenshots/fase12_03_catalogo_series.png
+documentation/screenshots/fase12_04_favoritos.png
+documentation/screenshots/fase12_05_vistos.png
+documentation/screenshots/fase12_06_perfil.png
+documentation/screenshots/fase12_07_estadisticas.png
+documentation/screenshots/fase12_08_catalogo_admin.png
+documentation/screenshots/fase12_09_estadisticas_usuarios.png
+```
+
+No se añadió captura responsive específica; el comportamiento adaptativo se apoya en Bootstrap y reglas globales y volverá a comprobarse en las pruebas finales.
+
+## Validación
+- diseño coherente en cliente y administración;
+- selector 10/30/50/100 operativo;
+- navegación sin duplicados;
+- Favoritos/Vistos conservan clasificación y actividad;
+- perfil, estadísticas, CRUD, filtros y permisos sin regresiones;
+- Chart.js responsive;
+- assets legacy eliminados;
+- frontend consolidado en un CSS y un JS.
+
+## Commit
+```text
+refactor: modernize and consolidate application design
+```
+**Estado: completada.**
+
+---
+
+
 # Fuentes técnicas
 
 - Flask: https://flask.palletsprojects.com/

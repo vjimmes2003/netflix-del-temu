@@ -1,217 +1,135 @@
 {% extends "base.html" %}
 
-{% block title %}
-{{ season["name"] }} — {{ media["title"] }}
-{% endblock %}
+{% block title %}{{ season["name"] }} — {{ media["title"] }}{% endblock %}
 
 {% block content %}
-
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/activity.css'
-    ) }}"
->
-
 <main class="activity-page">
 
     <section class="activity-heading">
-
         <a
-            href="{{ url_for(
-                'catalog.media_detail',
-                media_id=media['id']
-            ) }}"
+            href="{{ url_for('catalog.media_detail', media_id=media['id']) }}"
             class="activity-back-link"
         >
-            ← Volver a {{ media["title"] }}
+            <i class="bi bi-arrow-left"></i>
+            Volver a {{ media["title"] }}
         </a>
 
-        <p class="eyebrow">
-            SEGUIMIENTO DE SERIE
-        </p>
-
-        <h1>
-            {{ season["name"] }}
-        </h1>
-
-        <p class="activity-subtitle">
-            {{ media["title"] }}
-        </p>
+        <p class="eyebrow">SEGUIMIENTO DE SERIE</p>
+        <h1>{{ season["name"] }}</h1>
+        <p class="activity-subtitle">{{ media["title"] }}</p>
 
         {% if episodes %}
-
             <div
-                class="season-progress-summary
-                {% if season_completed %}
-                    season-progress-summary-completed
-                {% endif %}"
+                class="season-progress-summary {% if season_completed %}season-progress-summary-completed{% endif %}"
             >
                 <div>
                     {% if season_completed %}
-                        <strong>✓ Temporada completada</strong>
+                        <strong><i class="bi bi-trophy-fill"></i> Temporada completada</strong>
                         <small>Has visto todos sus episodios.</small>
                     {% else %}
                         <strong>
                             {{ watched_count }} de {{ episodes | length }} episodios vistos
                         </strong>
+                        <small>Sigue marcando episodios para completar la temporada.</small>
                     {% endif %}
                 </div>
+
                 <span>{{ season_percent }}%</span>
             </div>
 
             <div
-                class="season-detail-progress-bar
-                {% if season_completed %}completed{% endif %}"
+                class="season-detail-progress-bar {% if season_completed %}completed{% endif %}"
+                aria-label="Progreso de temporada"
             >
                 <span style="width: {{ season_percent }}%;"></span>
             </div>
 
             <form
                 method="post"
-                action="{{ url_for(
-                    'activity.toggle_season_watched',
-                    season_id=season['id']
-                ) }}"
+                action="{{ url_for('activity.toggle_season_watched', season_id=season['id']) }}"
                 class="season-complete-form"
             >
                 <input type="hidden" name="return_to" value="season">
+
                 <button
                     type="submit"
-                    class="season-complete-button
-                    {% if season_completed %}completed{% endif %}"
+                    class="season-complete-button {% if season_completed %}completed{% endif %}"
                 >
+                    <i class="bi {% if season_completed %}bi-arrow-counterclockwise{% else %}bi-check2-all{% endif %}"></i>
                     {% if season_completed %}
                         Desmarcar temporada
                     {% else %}
-                        ✓ Marcar temporada como vista
+                        Marcar temporada como vista
                     {% endif %}
                 </button>
             </form>
-
         {% endif %}
-
     </section>
 
 
     {% if episodes %}
-
         <section class="episode-list">
-
             {% for episode in episodes %}
-
-                <article
-                    class="episode-row
-                    {% if episode['is_watched'] %}
-                        episode-watched
-                    {% endif %}"
-                >
-
+                <article class="episode-row {% if episode['is_watched'] %}episode-watched{% endif %}">
                     <div class="episode-number">
                         {{ episode["episode_number"] }}
                     </div>
 
-
                     <div class="episode-content">
-
                         <div class="episode-title-row">
-
-                            <h2>
-                                {{ episode["name"] }}
-                            </h2>
+                            <h2>{{ episode["name"] }}</h2>
 
                             <div class="episode-meta">
-
                                 {% if episode["air_date"] %}
                                     <span>
-                                        {{
-                                            episode["air_date"]
-                                            | date_es
-                                        }}
+                                        <i class="bi bi-calendar3"></i>
+                                        {{ episode["air_date"] | date_es }}
                                     </span>
                                 {% endif %}
 
                                 {% if episode["runtime_minutes"] %}
                                     <span>
-                                        {{
-                                            episode[
-                                                "runtime_minutes"
-                                            ]
-                                        }}
-                                        min
+                                        <i class="bi bi-clock"></i>
+                                        {{ episode["runtime_minutes"] }} min
                                     </span>
                                 {% endif %}
-
                             </div>
-
                         </div>
 
                         {% if episode["overview"] %}
-
-                            <p>
-                                {{ episode["overview"] }}
-                            </p>
-
+                            <p>{{ episode["overview"] }}</p>
                         {% endif %}
-
                     </div>
-
 
                     <form
                         method="post"
-                        action="{{ url_for(
-                            'activity.toggle_episode_watched',
-                            episode_id=episode['id']
-                        ) }}"
+                        action="{{ url_for('activity.toggle_episode_watched', episode_id=episode['id']) }}"
                     >
-
-                        <input
-                            type="hidden"
-                            name="return_to"
-                            value="season"
-                        >
+                        <input type="hidden" name="return_to" value="season">
 
                         <button
                             type="submit"
-                            class="episode-watch-button
-                            {% if episode['is_watched'] %}
-                                active
-                            {% endif %}"
+                            class="episode-watch-button {% if episode['is_watched'] %}active{% endif %}"
                         >
-                            {% if episode["is_watched"] %}
-                                ✓ Visto
-                            {% else %}
-                                Marcar visto
-                            {% endif %}
+                            <i class="bi {% if episode['is_watched'] %}bi-check-circle-fill{% else %}bi-circle{% endif %}"></i>
+                            {% if episode["is_watched"] %}Visto{% else %}Marcar visto{% endif %}
                         </button>
-
                     </form>
-
                 </article>
-
             {% endfor %}
-
         </section>
-
     {% else %}
-
         <section class="activity-empty">
-
-            <h2>
-                No hay episodios cargados
-            </h2>
-
+            <span class="empty-state-icon">
+                <i class="bi bi-collection-play"></i>
+            </span>
+            <h2>No hay episodios cargados</h2>
             <p>
-                Esta temporada existe en el catálogo,
-                pero sus episodios todavía no están
+                La temporada existe, pero sus episodios todavía no están
                 almacenados en la base de datos local.
             </p>
-
         </section>
-
     {% endif %}
 
 </main>
-
 {% endblock %}

@@ -6,73 +6,40 @@
 
 {% block content %}
 
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/admin_users.css'
-    ) }}"
->
-
 <main class="admin-page">
 
     <section class="admin-form-shell">
 
-        <a
-            href="{{ url_for(
-                'admin.users'
-            ) }}"
-            class="admin-back-link"
-        >
-            ← Volver a usuarios
-        </a>
+        <header class="admin-form-header">
+            <a
+                href="{{ url_for(
+                    'admin.users'
+                ) }}"
+                class="admin-back-link"
+            >
+                ← Volver a usuarios
+            </a>
 
-        <p class="eyebrow">
-            ADMINISTRACIÓN
-        </p>
-
-        <h1>
-            {{ page_title }}
-        </h1>
-
-        {% if form_mode == "create" %}
-            <p>
-                La cuenta se creará como cliente
-                y estará activa desde el principio.
+            <p class="eyebrow">
+                ADMINISTRACIÓN
             </p>
-        {% else %}
-            <p>
-                La contraseña puede dejarse vacía
-                para mantener la actual.
-            </p>
-        {% endif %}
 
+            <h1>
+                {{ page_title }}
+            </h1>
 
-        {% with messages = get_flashed_messages(
-            with_categories=true
-        ) %}
-
-            {% if messages %}
-
-                <div class="admin-messages">
-
-                    {% for category, message in messages %}
-
-                        <div
-                            class="admin-message
-                            admin-message-{{ category }}"
-                        >
-                            {{ message }}
-                        </div>
-
-                    {% endfor %}
-
-                </div>
-
+            {% if form_mode == "create" %}
+                <p>
+                    La cuenta se creará como cliente
+                    y estará activa desde el principio.
+                </p>
+            {% else %}
+                <p>
+                    La contraseña puede dejarse vacía
+                    para mantener la actual.
+                </p>
             {% endif %}
-
-        {% endwith %}
-
+        </header>
 
         <form
             method="post"

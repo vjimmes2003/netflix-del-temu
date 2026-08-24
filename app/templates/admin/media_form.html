@@ -6,79 +6,38 @@
 
 {% block content %}
 
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/admin_users.css'
-    ) }}"
->
-
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/admin_catalog.css'
-    ) }}"
->
-
 <main class="admin-page">
 
     <section class="admin-media-form-shell">
 
-        <a
-            href="{{ url_for(
-                'admin.media_catalog'
-            ) }}"
-            class="admin-back-link"
-        >
-            ← Volver al catálogo
-        </a>
+        <header class="admin-form-header">
+            <a
+                href="{{ url_for(
+                    'admin.media_catalog'
+                ) }}"
+                class="admin-back-link"
+            >
+                ← Volver al catálogo
+            </a>
 
-        <p class="eyebrow">
-            ADMINISTRACIÓN
-        </p>
-
-        <h1>
-            {{ page_title }}
-        </h1>
-
-        {% if form_mode == "create" %}
-            <p>
-                Crea una película o serie manualmente.
+            <p class="eyebrow">
+                ADMINISTRACIÓN
             </p>
-        {% else %}
-            <p>
-                Modifica los datos locales del contenido.
-            </p>
-        {% endif %}
 
+            <h1>
+                {{ page_title }}
+            </h1>
 
-        {% with messages = get_flashed_messages(
-            with_categories=true
-        ) %}
-
-            {% if messages %}
-
-                <div class="admin-messages">
-
-                    {% for category, message in messages %}
-
-                        <div
-                            class="admin-message
-                            admin-message-{{ category }}"
-                        >
-                            {{ message }}
-                        </div>
-
-                    {% endfor %}
-
-                </div>
-
+            {% if form_mode == "create" %}
+                <p>
+                    Crea una película o serie manualmente.
+                </p>
+            {% else %}
+                <p>
+                    Modifica los datos locales del contenido.
+                </p>
             {% endif %}
-
-        {% endwith %}
-
+        </header>
 
         {% if form_mode == "edit" and media %}
 
@@ -597,42 +556,5 @@
 
 </main>
 
-
-<script>
-(function () {
-    const typeSelect = document.getElementById("media_type");
-    const seriesStructure = document.getElementById("series-structure");
-    const movieRuntime = document.getElementById("movie-runtime-field");
-
-    if (!typeSelect) {
-        return;
-    }
-
-    function updateFields() {
-        const isSeries = typeSelect.value === "series";
-
-        if (seriesStructure) {
-            seriesStructure.hidden = !isSeries;
-        }
-
-        if (movieRuntime) {
-            movieRuntime.hidden = isSeries;
-
-            const input = movieRuntime.querySelector("input");
-
-            if (input) {
-                input.required = !isSeries;
-            }
-        }
-    }
-
-    typeSelect.addEventListener(
-        "change",
-        updateFields
-    );
-
-    updateFields();
-})();
-</script>
 
 {% endblock %}

@@ -1,65 +1,53 @@
 {% extends "base.html" %}
 
-{% block title %}
-Iniciar sesión — Netflix del Temu
-{% endblock %}
-
+{% block title %}Iniciar sesión — Netflix del Temu{% endblock %}
 
 {% block content %}
-
 <main class="form-page">
-
     <section class="form-card">
+        <div class="auth-icon" aria-hidden="true">
+            <i class="bi bi-person"></i>
+        </div>
 
         <p class="eyebrow">BIENVENIDO DE NUEVO</p>
+        <h1 class="form-title">Iniciar sesión</h1>
+        <p class="auth-subtitle">Continúa desde donde lo dejaste.</p>
 
-        <h1 class="form-title">
-            Iniciar sesión
-        </h1>
-
-        <form method="post">
-
-            <label class="field">
-                <span>Usuario o correo electrónico</span>
-
+        <form method="post" class="d-grid gap-3">
+            <div>
+                <label for="identifier" class="form-label">Usuario o correo electrónico</label>
                 <input
+                    id="identifier"
+                    class="form-control"
                     type="text"
                     name="identifier"
                     required
                     autocomplete="username"
+                    autofocus
                 >
-            </label>
+            </div>
 
-            <label class="field">
-                <span>Contraseña</span>
-
+            <div>
+                <label for="password" class="form-label">Contraseña</label>
                 <input
+                    id="password"
+                    class="form-control"
                     type="password"
                     name="password"
                     required
                     autocomplete="current-password"
                 >
-            </label>
+            </div>
 
-            <button
-                type="submit"
-                class="button button-primary form-submit"
-            >
+            <button type="submit" class="btn btn-primary btn-lg mt-2">
                 Iniciar sesión
             </button>
-
         </form>
 
         <p class="form-footer">
             ¿No tienes cuenta?
-
-            <a href="{{ url_for('auth.register') }}">
-                Regístrate
-            </a>
+            <a href="{{ url_for('auth.register') }}">Regístrate</a>
         </p>
-
     </section>
-
 </main>
-
 {% endblock %}

@@ -1,177 +1,118 @@
 {% extends "base.html" %}
 
-{% block title %}
-Favoritos — Netflix del Temu
-{% endblock %}
+{% block title %}Favoritos — Netflix del Temu{% endblock %}
 
 {% block content %}
-
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/activity.css'
-    ) }}"
->
-
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/content_controls.css'
-    ) }}"
->
-
 <main class="activity-page">
 
     <section class="activity-heading activity-heading-row">
-
         <div>
-
-            <p class="eyebrow">
-                MI BIBLIOTECA
-            </p>
-
-            <h1>
-                Favoritos
-            </h1>
-
+            <p class="eyebrow">MI BIBLIOTECA</p>
+            <h1>Favoritos</h1>
             <p class="activity-subtitle">
                 {{ items | length }}
-                contenidos guardados
+                {% if items | length == 1 %}contenido guardado{% else %}contenidos guardados{% endif %}
             </p>
-
         </div>
 
         <div class="activity-heading-actions">
-
             {% if mature_content_confirmed %}
-
                 <form
                     method="post"
-                    action="{{ url_for(
-                        'catalog.toggle_mature_content'
-                    ) }}"
+                    action="{{ url_for('catalog.toggle_mature_content') }}"
                     class="mature-quick-control"
                 >
-
-                    <input
-                        type="hidden"
-                        name="return_to"
-                        value="favorites"
-                    >
-
+                    <input type="hidden" name="return_to" value="favorites">
                     <input
                         type="hidden"
                         name="enabled"
-                        value="{{
-                            0
-                            if mature_content_enabled
-                            else 1
-                        }}"
+                        value="{{ 0 if mature_content_enabled else 1 }}"
                     >
 
                     <div class="mature-switch-copy">
                         <span>Contenido maduro</span>
-                        <small>
-                            {% if mature_content_enabled %}
-                                Visible
-                            {% else %}
-                                Oculto
-                            {% endif %}
-                        </small>
+                        <small>{% if mature_content_enabled %}Visible{% else %}Oculto{% endif %}</small>
                     </div>
 
                     <button
                         type="submit"
-                        class="mature-switch-button
-                        {% if mature_content_enabled %}
-                            active
-                        {% endif %}"
+                        class="mature-switch-button {% if mature_content_enabled %}active{% endif %}"
                         aria-label="Cambiar visibilidad de contenido maduro"
                     >
                         <span></span>
                     </button>
-
                 </form>
-
             {% else %}
-
                 <a
-                    href="{{ url_for(
-                        'catalog.content_settings'
-                    ) }}"
+                    href="{{ url_for('catalog.content_settings') }}"
                     class="mature-first-setup"
                 >
-                    <span>Contenido maduro</span>
-                    <small>Configurar</small>
+                    <i class="bi bi-shield-check"></i>
+                    <span>
+                        Contenido maduro
+                        <small>Configurar</small>
+                    </span>
                 </a>
-
             {% endif %}
-
-            <nav class="activity-nav">
-
-                <a href="{{ url_for('catalog.catalog') }}">Catálogo</a>
-                <a href="{{ url_for('activity.watched') }}">Vistos</a>
-                <a href="{{ url_for('statistics.user_profile') }}">Perfil</a>
-
-            </nav>
-
         </div>
-
     </section>
 
 
+    <nav class="catalog-tabs library-tabs" aria-label="Biblioteca">
+        <a href="{{ url_for('catalog.catalog', type='movie') }}" class="catalog-tab tab-movies">
+            <i class="bi bi-film"></i> Películas
+        </a>
+        <a href="{{ url_for('catalog.catalog', type='series') }}" class="catalog-tab tab-series">
+            <i class="bi bi-tv"></i> Series
+        </a>
+        <a href="{{ url_for('activity.favorites') }}" class="catalog-tab tab-favorites active">
+            <i class="bi bi-heart-fill"></i> Favoritos
+        </a>
+        <a href="{{ url_for('activity.watched') }}" class="catalog-tab tab-watched">
+            <i class="bi bi-check2-circle"></i> Vistos
+        </a>
+    </nav>
+
+
     {% if items %}
-
         <section class="library-grid">
-
             {% for item in items %}
-
-                <article class="library-card">
-
+                <article class="library-card library-card-favorite">
                     <a
-                        href="{{ url_for(
-                            'catalog.media_detail',
-                            media_id=item['id']
-                        ) }}"
+                        href="{{ url_for('catalog.media_detail', media_id=item['id']) }}"
                         class="library-card-main"
                     >
-
                         <div class="library-poster">
-
                             {% if item["poster_path"] %}
-
                                 <img
-                                    src="{{ item['poster_path']
-                                        | tmdb_image('w500') }}"
+                                    src="{{ item['poster_path'] | tmdb_image('w500') }}"
                                     alt="Portada de {{ item['title'] }}"
                                     loading="lazy"
                                 >
-
                             {% else %}
-
                                 <div class="library-placeholder">
-                                    Sin portada
+                                    <i class="bi bi-image"></i>
                                 </div>
-
                             {% endif %}
 
+                            {% if item["content_level"] == "mature" %}
+                                <span class="mature-card-badge">
+                                    <i class="bi bi-shield-exclamation"></i>
+                                    {{ item["certification"] or "18+" }}
+                                </span>
+                            {% endif %}
+
+                            <span class="library-card-icon">
+                                <i class="bi bi-heart-fill"></i>
+                            </span>
                         </div>
 
                         <div class="library-card-info">
-
                             <span class="library-type">
-                                {% if item["media_type"] == "movie" %}
-                                    Película
-                                {% else %}
-                                    Serie
-                                {% endif %}
+                                {% if item["media_type"] == "movie" %}Película{% else %}Serie{% endif %}
                             </span>
 
-                            <h2>
-                                {{ item["title"] }}
-                            </h2>
+                            <h2>{{ item["title"] }}</h2>
 
                             <p>
                                 {% if item["release_year"] %}
@@ -181,74 +122,43 @@ Favoritos — Netflix del Temu
                                 {% endif %}
 
                                 {% if item["tmdb_rating"] %}
-                                    · ★
-                                    {{
-                                        "%.1f"
-                                        | format(
-                                            item["tmdb_rating"]
-                                        )
-                                    }}
+                                    · <span class="text-rating">
+                                        <i class="bi bi-star-fill"></i>
+                                        {{ "%.1f" | format(item["tmdb_rating"]) }}
+                                    </span>
                                 {% endif %}
                             </p>
-
                         </div>
-
                     </a>
 
                     <form
                         method="post"
-                        action="{{ url_for(
-                            'activity.toggle_favorite',
-                            media_id=item['id']
-                        ) }}"
+                        action="{{ url_for('activity.toggle_favorite', media_id=item['id']) }}"
                     >
+                        <input type="hidden" name="return_to" value="favorites">
 
-                        <input
-                            type="hidden"
-                            name="return_to"
-                            value="favorites"
-                        >
-
-                        <button
-                            type="submit"
-                            class="library-remove-button"
-                        >
-                            Quitar de favoritos
+                        <button type="submit" class="library-remove-button">
+                            <i class="bi bi-heartbreak"></i>
+                            Quitar
                         </button>
-
                     </form>
-
                 </article>
-
             {% endfor %}
-
         </section>
-
     {% else %}
-
         <section class="activity-empty">
-
-            <h2>
-                Todavía no tienes favoritos
-            </h2>
-
+            <span class="empty-state-icon empty-state-icon-favorite">
+                <i class="bi bi-heart"></i>
+            </span>
+            <h2>Todavía no tienes favoritos</h2>
             <p>
-                Guarda películas y series desde
-                sus fichas para encontrarlas aquí.
+                Guarda películas y series desde sus fichas para encontrarlas aquí.
             </p>
-
-            <a
-                href="{{ url_for(
-                    'catalog.catalog'
-                ) }}"
-            >
+            <a href="{{ url_for('catalog.catalog') }}" class="btn btn-primary">
                 Explorar catálogo
             </a>
-
         </section>
-
     {% endif %}
 
 </main>
-
 {% endblock %}

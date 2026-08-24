@@ -15,7 +15,8 @@ from .db import get_db
 
 catalog_bp = Blueprint("catalog", __name__)
 
-ITEMS_PER_PAGE = 24
+DEFAULT_PER_PAGE = 30
+VALID_PER_PAGE = (10, 30, 50, 100)
 VALID_MEDIA_TYPES = ("movie", "series")
 VALID_SORT_OPTIONS = (
     "newest",
@@ -229,6 +230,15 @@ def catalog():
     if page < 1:
         page = 1
 
+    per_page = request.args.get(
+        "per_page",
+        DEFAULT_PER_PAGE,
+        type=int,
+    )
+
+    if per_page not in VALID_PER_PAGE:
+        per_page = DEFAULT_PER_PAGE
+
     search_query = request.args.get("q", "").strip()
 
     if len(search_query) > MAX_SEARCH_LENGTH:
@@ -266,13 +276,13 @@ def catalog():
 
     total_pages = max(
         1,
-        (total_items + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE,
+        (total_items + per_page - 1) // per_page,
     )
 
     if page > total_pages:
         page = total_pages
 
-    offset = (page - 1) * ITEMS_PER_PAGE
+    offset = (page - 1) * per_page
 
     order_by = get_order_by(sort_option)
 
@@ -285,6 +295,8 @@ def catalog():
             m.release_date,
             m.release_year,
             m.poster_path,
+            m.backdrop_path,
+            m.overview,
             m.tmdb_rating,
             m.tmdb_vote_count,
             m.media_type,
@@ -300,7 +312,7 @@ def catalog():
         """,
         (
             *filter_params,
-            ITEMS_PER_PAGE,
+            per_page,
             offset,
         ),
     ).fetchall()
@@ -318,6 +330,8 @@ def catalog():
         page=page,
         total_pages=total_pages,
         total_items=total_items,
+        per_page=per_page,
+        per_page_options=VALID_PER_PAGE,
         mature_content_enabled=mature_enabled,
         mature_content_confirmed=mature_confirmed,
         search_query=search_query,
@@ -826,6 +840,15 @@ def toggle_mature_content():
     if sort_option not in VALID_SORT_OPTIONS:
         sort_option = DEFAULT_SORT
 
+    per_page = request.form.get(
+        "per_page",
+        DEFAULT_PER_PAGE,
+        type=int,
+    )
+
+    if per_page not in VALID_PER_PAGE:
+        per_page = DEFAULT_PER_PAGE
+
     return_to = request.form.get(
         "return_to",
         "catalog",
@@ -848,6 +871,7 @@ def toggle_mature_content():
     redirect_args = {
         "type": media_type,
         "sort": sort_option,
+        "per_page": per_page,
     }
 
     if search_query:

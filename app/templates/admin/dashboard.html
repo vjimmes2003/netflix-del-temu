@@ -1,186 +1,102 @@
 {% extends "base.html" %}
 
-{% block title %}
-Administración — Netflix del Temu
-{% endblock %}
+{% block title %}Administración — Netflix del Temu{% endblock %}
 
 {% block content %}
-
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/admin_users.css'
-    ) }}"
->
-
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/admin_statistics.css'
-    ) }}"
->
-
 <main class="admin-page">
 
     <section class="admin-heading">
-
         <div>
-            <p class="eyebrow">
-                ADMINISTRACIÓN
-            </p>
-
-            <h1>
-                Panel de control
-            </h1>
-
+            <p class="eyebrow">ADMINISTRACIÓN</p>
+            <h1>Panel de control</h1>
             <p>
-                Gestión interna de usuarios
-                y catálogo.
+                Usuarios, catálogo y actividad desde un único espacio.
             </p>
         </div>
 
-        <a
-            href="{{ url_for(
-                'catalog.catalog'
-            ) }}"
-            class="admin-secondary-link"
-        >
+        <a href="{{ url_for('catalog.catalog') }}" class="admin-secondary-link">
+            <i class="bi bi-box-arrow-up-right"></i>
             Ver catálogo
         </a>
-
     </section>
 
 
-    <section class="admin-stat-grid">
-
+    <section class="admin-stat-grid admin-stat-grid-three">
         <article class="admin-stat-card">
             <span>Clientes</span>
-
-            <strong>
-                {{ client_stats["total_clients"] or 0 }}
-            </strong>
-
+            <strong>{{ client_stats["total_clients"] or 0 }}</strong>
             <small>
-                {{ client_stats["active_clients"] or 0 }}
-                activos ·
-                {{ client_stats["inactive_clients"] or 0 }}
-                inactivos
+                {{ client_stats["active_clients"] or 0 }} activos ·
+                {{ client_stats["inactive_clients"] or 0 }} inactivos
             </small>
         </article>
 
         <article class="admin-stat-card">
             <span>Películas</span>
-
-            <strong>
-                {{ media_stats["movies"] or 0 }}
-            </strong>
-
-            <small>
-                Contenidos almacenados
-            </small>
+            <strong>{{ media_stats["movies"] or 0 }}</strong>
+            <small>contenidos almacenados</small>
         </article>
 
         <article class="admin-stat-card">
             <span>Series</span>
-
-            <strong>
-                {{ media_stats["series"] or 0 }}
-            </strong>
-
-            <small>
-                Contenidos almacenados
-            </small>
+            <strong>{{ media_stats["series"] or 0 }}</strong>
+            <small>contenidos almacenados</small>
         </article>
-
     </section>
 
 
-    <section class="admin-module-grid admin-module-grid-three">
-
-        <a
-            href="{{ url_for(
-                'admin.users'
-            ) }}"
-            class="admin-module-card"
-        >
+    <section class="admin-module-grid">
+        <a href="{{ url_for('admin.users') }}" class="admin-module-card">
             <span class="admin-module-icon">
-                U
+                <i class="bi bi-people-fill"></i>
             </span>
 
             <div>
-                <h2>
-                    Usuarios
-                </h2>
-
+                <h2>Usuarios</h2>
                 <p>
-                    Crear, editar, desactivar
-                    y reactivar clientes.
+                    Crear, editar, desactivar y reactivar clientes.
                 </p>
             </div>
 
             <span class="admin-module-arrow">
-                →
+                <i class="bi bi-arrow-up-right"></i>
             </span>
         </a>
 
-
-        <a
-            href="{{ url_for(
-                'admin.media_catalog'
-            ) }}"
-            class="admin-module-card"
-        >
+        <a href="{{ url_for('admin.media_catalog') }}" class="admin-module-card">
             <span class="admin-module-icon">
-                C
+                <i class="bi bi-collection-play-fill"></i>
             </span>
 
             <div>
-                <h2>
-                    Catálogo
-                </h2>
-
+                <h2>Catálogo</h2>
                 <p>
-                    Crear, editar, eliminar
-                    y restaurar películas y series.
+                    Crear, editar, ocultar y restaurar películas y series.
                 </p>
             </div>
 
             <span class="admin-module-arrow">
-                →
+                <i class="bi bi-arrow-up-right"></i>
             </span>
         </a>
 
-
-        <a
-            href="{{ url_for(
-                'admin.statistics'
-            ) }}"
-            class="admin-module-card"
-        >
+        <a href="{{ url_for('admin.statistics') }}" class="admin-module-card">
             <span class="admin-module-icon">
-                E
+                <i class="bi bi-bar-chart-fill"></i>
             </span>
 
             <div>
-                <h2>
-                    Estadísticas
-                </h2>
-
+                <h2>Estadísticas</h2>
                 <p>
-                    Comparar actividad, tiempo
-                    y registros entre clientes.
+                    Comparar actividad, tiempo y registros entre clientes.
                 </p>
             </div>
 
             <span class="admin-module-arrow">
-                →
+                <i class="bi bi-arrow-up-right"></i>
             </span>
         </a>
-
     </section>
 
 </main>
-
 {% endblock %}

@@ -1,100 +1,93 @@
 {% extends "base.html" %}
 
-{% block title %}
-Crear cuenta — Netflix del Temu
-{% endblock %}
-
+{% block title %}Crear cuenta — Netflix del Temu{% endblock %}
 
 {% block content %}
-
 <main class="form-page">
-
-    <section class="form-card">
+    <section class="form-card form-card-wide">
+        <div class="auth-icon" aria-hidden="true">
+            <i class="bi bi-person-plus"></i>
+        </div>
 
         <p class="eyebrow">EMPIEZA TU CATÁLOGO</p>
+        <h1 class="form-title">Crear una cuenta</h1>
+        <p class="auth-subtitle">Tu perfil, favoritos, historial y estadísticas empiezan aquí.</p>
 
-        <h1 class="form-title">
-            Crear una cuenta
-        </h1>
-
-        <form method="post">
-
-            <label class="field">
-                <span>Nombre de usuario</span>
-
+        <form method="post" class="row g-3">
+            <div class="col-md-6">
+                <label for="username" class="form-label">Nombre de usuario</label>
                 <input
+                    id="username"
+                    class="form-control"
                     type="text"
                     name="username"
                     minlength="3"
+                    maxlength="50"
                     required
                     autocomplete="username"
                 >
-            </label>
+            </div>
 
-            <label class="field">
-                <span>Nombre visible</span>
-
+            <div class="col-md-6">
+                <label for="display_name" class="form-label">Nombre visible</label>
                 <input
+                    id="display_name"
+                    class="form-control"
                     type="text"
                     name="display_name"
+                    maxlength="100"
+                    required
                     autocomplete="name"
                 >
-            </label>
+            </div>
 
-            <label class="field">
-                <span>Correo electrónico</span>
-
+            <div class="col-12">
+                <label for="email" class="form-label">Correo electrónico</label>
                 <input
+                    id="email"
+                    class="form-control"
                     type="email"
                     name="email"
                     required
                     autocomplete="email"
                 >
-            </label>
+            </div>
 
-            <label class="field">
-                <span>Contraseña</span>
-
+            <div class="col-md-6">
+                <label for="password" class="form-label">Contraseña</label>
                 <input
+                    id="password"
+                    class="form-control"
                     type="password"
                     name="password"
                     minlength="8"
                     required
                     autocomplete="new-password"
                 >
-            </label>
+            </div>
 
-            <label class="field">
-                <span>Repetir contraseña</span>
-
+            <div class="col-md-6">
+                <label for="password_confirmation" class="form-label">Repetir contraseña</label>
                 <input
+                    id="password_confirmation"
+                    class="form-control"
                     type="password"
                     name="password_confirmation"
                     minlength="8"
                     required
                     autocomplete="new-password"
                 >
-            </label>
+            </div>
 
-            <button
-                type="submit"
-                class="button button-primary form-submit"
-            >
-                Crear cuenta
-            </button>
-
+            <div class="col-12 d-grid mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">Crear cuenta</button>
+            </div>
         </form>
 
         <p class="form-footer">
             ¿Ya tienes cuenta?
-
-            <a href="{{ url_for('auth.login') }}">
-                Inicia sesión
-            </a>
+            <a href="{{ url_for('auth.login') }}">Inicia sesión</a>
         </p>
-
     </section>
-
 </main>
-
 {% endblock %}

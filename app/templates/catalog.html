@@ -1,552 +1,403 @@
 {% extends "base.html" %}
 
 {% block title %}
-Catálogo — Netflix del Temu
+{% if media_type == "movie" %}Películas{% else %}Series{% endif %} — Netflix del Temu
 {% endblock %}
 
 {% block content %}
 
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/content_controls.css'
-    ) }}"
->
-
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/search_filters.css'
-    ) }}"
->
-
 <main class="catalog-page">
 
-    <section class="catalog-header">
+    {% if media_items %}
+        {% set featured = media_items[0] %}
 
-        <div>
+        <section
+            class="catalog-featured {% if media_type == 'series' %}catalog-featured-series{% else %}catalog-featured-movie{% endif %}"
+            {% if featured["backdrop_path"] %}
+                style="--featured-image: url('{{ featured['backdrop_path'] | tmdb_image('w1280') }}');"
+            {% endif %}
+        >
+            <div class="catalog-featured-overlay"></div>
 
-            <p class="eyebrow">
-                CATÁLOGO AUDIOVISUAL
-            </p>
+            <div class="catalog-featured-content">
+                <span class="catalog-featured-label">
+                    {% if media_type == "movie" %}
+                        <i class="bi bi-film"></i> Destacada en películas
+                    {% else %}
+                        <i class="bi bi-tv"></i> Destacada en series
+                    {% endif %}
+                </span>
 
-            <h1 class="catalog-title">
+                <h1>{{ featured["title"] }}</h1>
 
-                {% if media_type == "movie" %}
-                    Películas
-                {% else %}
-                    Series
-                {% endif %}
-
-            </h1>
-
-            <p class="catalog-count">
-                {{ total_items }} contenidos encontrados
-            </p>
-
-        </div>
-
-        <div class="catalog-actions">
-
-            <nav class="catalog-tabs">
-
-                <a
-                    href="{{ url_for(
-                        'catalog.catalog',
-                        type='movie',
-                        q=search_query,
-                        genre=genre_id,
-                        sort=sort_option
-                    ) }}"
-                    class="catalog-tab
-                    {% if media_type == 'movie' %}
-                        active
-                    {% endif %}"
-                >
-                    Películas
-                </a>
-
-                <a
-                    href="{{ url_for(
-                        'catalog.catalog',
-                        type='series',
-                        q=search_query,
-                        genre=genre_id,
-                        sort=sort_option
-                    ) }}"
-                    class="catalog-tab
-                    {% if media_type == 'series' %}
-                        active
-                    {% endif %}"
-                >
-                    Series
-                </a>
-
-                <a
-                    href="{{ url_for(
-                        'activity.favorites'
-                    ) }}"
-                    class="catalog-tab"
-                >
-                    Favoritos
-                </a>
-
-                <a
-                    href="{{ url_for(
-                        'activity.watched'
-                    ) }}"
-                    class="catalog-tab"
-                >
-                    Vistos
-                </a>
-
-                <a
-                    href="{{ url_for(
-                        'statistics.user_profile'
-                    ) }}"
-                    class="catalog-tab"
-                >
-                    Perfil
-                </a>
-
-            </nav>
-
-            {% if mature_content_confirmed %}
-
-                <form
-                    method="post"
-                    action="{{ url_for(
-                        'catalog.toggle_mature_content'
-                    ) }}"
-                    class="mature-quick-control"
-                >
-
-                    <input
-                        type="hidden"
-                        name="media_type"
-                        value="{{ media_type }}"
-                    >
-
-                    <input
-                        type="hidden"
-                        name="q"
-                        value="{{ search_query }}"
-                    >
-
-                    <input
-                        type="hidden"
-                        name="sort"
-                        value="{{ sort_option }}"
-                    >
-
-                    {% if genre_id %}
-                        <input
-                            type="hidden"
-                            name="genre"
-                            value="{{ genre_id }}"
-                        >
+                <div class="catalog-featured-meta">
+                    {% if featured["release_year"] %}
+                        <span>{{ featured["release_year"] }}</span>
                     {% endif %}
 
-                    <input
-                        type="hidden"
-                        name="enabled"
-                        value="{{
-                            0
-                            if mature_content_enabled
-                            else 1
-                        }}"
+                    {% if featured["tmdb_rating"] %}
+                        <span class="featured-rating">
+                            <i class="bi bi-star-fill"></i>
+                            {{ "%.1f" | format(featured["tmdb_rating"]) }}
+                        </span>
+                    {% endif %}
+
+                    {% if featured["certification"] %}
+                        <span>{{ featured["certification"] }}</span>
+                    {% endif %}
+                </div>
+
+                {% if featured["overview"] %}
+                    <p>{{ featured["overview"] | truncate(220) }}</p>
+                {% endif %}
+
+                <a
+                    href="{{ url_for('catalog.media_detail', media_id=featured['id']) }}"
+                    class="btn btn-light catalog-featured-button"
+                >
+                    <i class="bi bi-play-fill"></i>
+                    Ver ficha
+                </a>
+            </div>
+        </section>
+    {% endif %}
+
+
+    <section class="catalog-toolbar">
+
+        <div class="catalog-heading">
+            <div>
+                <p class="eyebrow">
+                    {% if media_type == "movie" %}
+                        COLECCIÓN DE PELÍCULAS
+                    {% else %}
+                        COLECCIÓN DE SERIES
+                    {% endif %}
+                </p>
+
+                <h2 class="catalog-title">
+                    {% if media_type == "movie" %}
+                        Películas
+                    {% else %}
+                        Series
+                    {% endif %}
+                </h2>
+
+                <p class="catalog-count">
+                    {{ total_items }}
+                    {% if total_items == 1 %}resultado{% else %}resultados{% endif %}
+                </p>
+            </div>
+
+            <div class="catalog-toolbar-side">
+                {% if mature_content_confirmed %}
+                    <form
+                        method="post"
+                        action="{{ url_for('catalog.toggle_mature_content') }}"
+                        class="mature-quick-control"
                     >
+                        <input type="hidden" name="return_to" value="catalog">
+                        <input type="hidden" name="media_type" value="{{ media_type }}">
+                        <input type="hidden" name="q" value="{{ search_query }}">
+                        <input type="hidden" name="genre" value="{{ genre_id or '' }}">
+                        <input type="hidden" name="sort" value="{{ sort_option }}">
+                        <input type="hidden" name="per_page" value="{{ per_page }}">
+                        <input
+                            type="hidden"
+                            name="enabled"
+                            value="{{ 0 if mature_content_enabled else 1 }}"
+                        >
 
-                    <div class="mature-switch-copy">
+                        <div class="mature-switch-copy">
+                            <span>Contenido maduro</span>
+                            <small>
+                                {% if mature_content_enabled %}Visible{% else %}Oculto{% endif %}
+                            </small>
+                        </div>
 
+                        <button
+                            type="submit"
+                            class="mature-switch-button {% if mature_content_enabled %}active{% endif %}"
+                            aria-label="Cambiar visibilidad de contenido maduro"
+                        >
+                            <span></span>
+                        </button>
+                    </form>
+                {% else %}
+                    <a
+                        href="{{ url_for('catalog.content_settings') }}"
+                        class="mature-first-setup"
+                    >
+                        <i class="bi bi-shield-check"></i>
                         <span>
                             Contenido maduro
+                            <small>Configurar</small>
                         </span>
-
-                        <small>
-                            {% if mature_content_enabled %}
-                                Visible
-                            {% else %}
-                                Oculto
-                            {% endif %}
-                        </small>
-
-                    </div>
-
-                    <button
-                        type="submit"
-                        class="mature-switch-button
-                        {% if mature_content_enabled %}
-                            active
-                        {% endif %}"
-                    >
-                        <span></span>
-                    </button>
-
-                </form>
-
-            {% else %}
-
-                <a
-                    href="{{ url_for(
-                        'catalog.content_settings'
-                    ) }}"
-                    class="mature-first-setup"
-                >
-                    <span>
-                        Contenido maduro
-                    </span>
-
-                    <small>
-                        Configurar
-                    </small>
-                </a>
-
-            {% endif %}
-
+                    </a>
+                {% endif %}
+            </div>
         </div>
 
-    </section>
 
-    <section class="catalog-search-panel">
-
-        <form
-            method="get"
-            action="{{ url_for(
-                'catalog.catalog'
-            ) }}"
-            class="catalog-search-form"
-        >
-
-            <input
-                type="hidden"
-                name="type"
-                value="{{ media_type }}"
+        <nav class="catalog-tabs" aria-label="Biblioteca">
+            <a
+                href="{{ url_for('catalog.catalog', type='movie', per_page=per_page) }}"
+                class="catalog-tab tab-movies {% if media_type == 'movie' %}active{% endif %}"
             >
+                <i class="bi bi-film"></i>
+                Películas
+            </a>
 
-            <label class="search-field">
+            <a
+                href="{{ url_for('catalog.catalog', type='series', per_page=per_page) }}"
+                class="catalog-tab tab-series {% if media_type == 'series' %}active{% endif %}"
+            >
+                <i class="bi bi-tv"></i>
+                Series
+            </a>
 
-                <span>
-                    Buscar por título
-                </span>
+            <a
+                href="{{ url_for('activity.favorites') }}"
+                class="catalog-tab tab-favorites"
+            >
+                <i class="bi bi-heart-fill"></i>
+                Favoritos
+            </a>
 
-                <input
-                    type="search"
-                    name="q"
-                    value="{{ search_query }}"
-                    maxlength="100"
-                    placeholder="
-                        {% if media_type == 'movie' %}
-                            Ej. Interstellar
-                        {% else %}
-                            Ej. Breaking Bad
-                        {% endif %}
-                    "
-                    autocomplete="off"
-                >
+            <a
+                href="{{ url_for('activity.watched') }}"
+                class="catalog-tab tab-watched"
+            >
+                <i class="bi bi-check2-circle"></i>
+                Vistos
+            </a>
+        </nav>
 
-            </label>
 
-            <label class="search-field">
+        <form method="get" class="catalog-search-panel" id="catalogFilters">
+            <input type="hidden" name="type" value="{{ media_type }}">
 
-                <span>
-                    Género
-                </span>
-
-                <select name="genre">
-
-                    <option value="">
-                        Todos los géneros
-                    </option>
-
-                    {% for genre in genres %}
-
-                        <option
-                            value="{{ genre['id'] }}"
-                            {% if genre_id == genre['id'] %}
-                                selected
-                            {% endif %}
+            <div class="catalog-filter-grid">
+                <label class="catalog-filter catalog-filter-search">
+                    <span>Buscar</span>
+                    <div class="catalog-search-input">
+                        <i class="bi bi-search"></i>
+                        <input
+                            type="search"
+                            name="q"
+                            value="{{ search_query }}"
+                            placeholder="Título o título original..."
+                            maxlength="100"
+                            autocomplete="off"
+                            data-catalog-search
                         >
-                            {{ genre["name"] }}
+                    </div>
+                </label>
+
+                <label class="catalog-filter">
+                    <span>Género</span>
+                    <select name="genre" class="form-select">
+                        <option value="">Todos</option>
+                        {% for genre in genres %}
+                            <option
+                                value="{{ genre['id'] }}"
+                                {% if genre_id == genre["id"] %}selected{% endif %}
+                            >
+                                {{ genre["name"] }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
+
+                <label class="catalog-filter">
+                    <span>Orden</span>
+                    <select name="sort" class="form-select">
+                        <option value="popularity" {% if sort_option == "popularity" %}selected{% endif %}>
+                            Más populares
                         </option>
+                        <option value="newest" {% if sort_option == "newest" %}selected{% endif %}>
+                            Más recientes
+                        </option>
+                        <option value="oldest" {% if sort_option == "oldest" %}selected{% endif %}>
+                            Más antiguas
+                        </option>
+                        <option value="rating" {% if sort_option == "rating" %}selected{% endif %}>
+                            Mejor valoradas
+                        </option>
+                    </select>
+                </label>
 
-                    {% endfor %}
-
-                </select>
-
-            </label>
-
-            <label class="search-field">
-
-                <span>
-                    Ordenar por
-                </span>
-
-                <select name="sort">
-
-                    <option
-                        value="popularity"
-                        {% if sort_option == 'popularity' %}
-                            selected
-                        {% endif %}
+                <label class="catalog-filter catalog-filter-size">
+                    <span>Por página</span>
+                    <select
+                        name="per_page"
+                        class="form-select"
+                        data-auto-submit
                     >
-                        Más populares
-                    </option>
+                        {% for option in per_page_options %}
+                            <option value="{{ option }}" {% if per_page == option %}selected{% endif %}>
+                                {{ option }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </label>
 
-                    <option
-                        value="newest"
-                        {% if sort_option == 'newest' %}
-                            selected
-                        {% endif %}
-                    >
-                        Más recientes estrenadas
-                    </option>
+                <div class="catalog-filter-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-funnel"></i>
+                        Aplicar
+                    </button>
 
-                    <option
-                        value="oldest"
-                        {% if sort_option == 'oldest' %}
-                            selected
-                        {% endif %}
-                    >
-                        Más antiguas
-                    </option>
-
-                    <option
-                        value="rating"
-                        {% if sort_option == 'rating' %}
-                            selected
-                        {% endif %}
-                    >
-                        Mejor valoradas
-                    </option>
-
-                </select>
-
-            </label>
-
-            <div class="search-form-actions">
-
-                <button
-                    type="submit"
-                    class="search-submit"
-                >
-                    Aplicar
-                </button>
-
-                {% if
-                    search_query
-                    or genre_id
-                    or sort_option != 'popularity'
-                %}
-
-                    <a
-                        href="{{ url_for(
-                            'catalog.catalog',
-                            type=media_type
-                        ) }}"
-                        class="search-clear"
-                    >
-                        Limpiar
-                    </a>
-
-                {% endif %}
-
+                    {% if search_query or genre_id or sort_option != "popularity" or per_page != 30 %}
+                        <a
+                            href="{{ url_for('catalog.catalog', type=media_type) }}"
+                            class="btn btn-outline-light"
+                        >
+                            Limpiar
+                        </a>
+                    {% endif %}
+                </div>
             </div>
-
         </form>
 
-        {% if search_query or genre_id %}
-
-            <div class="active-search-summary">
-
-                <span>
-                    Filtros activos:
-                </span>
-
-                {% if search_query %}
-                    <strong>
-                        “{{ search_query }}”
-                    </strong>
-                {% endif %}
-
-                {% if genre_id %}
-
-                    {% for genre in genres %}
-
-                        {% if genre["id"] == genre_id %}
-                            <strong>
-                                {{ genre["name"] }}
-                            </strong>
-                        {% endif %}
-
-                    {% endfor %}
-
-                {% endif %}
-
-            </div>
-
-        {% endif %}
-
     </section>
 
+
     {% if media_items %}
-
-        <section class="media-grid">
-
+        <section class="media-grid" aria-label="Resultados del catálogo">
             {% for item in media_items %}
-
                 <a
-                    href="{{ url_for(
-                        'catalog.media_detail',
-                        media_id=item['id']
-                    ) }}"
-                    class="media-card"
+                    href="{{ url_for('catalog.media_detail', media_id=item['id']) }}"
+                    class="media-card {% if item['media_type'] == 'series' %}media-card-series{% else %}media-card-movie{% endif %}"
                 >
-
                     <div class="media-poster">
-
                         {% if item["poster_path"] %}
-
                             <img
-                                src="{{ item['poster_path']
-                                    | tmdb_image('w500') }}"
+                                src="{{ item['poster_path'] | tmdb_image('w500') }}"
                                 alt="Portada de {{ item['title'] }}"
                                 loading="lazy"
                             >
-
                         {% else %}
-
                             <div class="poster-placeholder">
-                                Sin portada
+                                <i class="bi bi-image"></i>
+                                <span>Sin portada</span>
                             </div>
+                        {% endif %}
 
+                        <span class="media-type-badge">
+                            {% if item["media_type"] == "movie" %}
+                                <i class="bi bi-film"></i> Película
+                            {% else %}
+                                <i class="bi bi-tv"></i> Serie
+                            {% endif %}
+                        </span>
+
+                        {% if item["tmdb_rating"] %}
+                            <span class="rating-badge">
+                                <i class="bi bi-star-fill"></i>
+                                {{ "%.1f" | format(item["tmdb_rating"]) }}
+                            </span>
                         {% endif %}
 
                         {% if item["content_level"] == "mature" %}
-
-                            <span class="mature-card-badge">
-
-                                MADURO
-
-                                {% if item["certification"] %}
-                                    · {{ item["certification"] }}
-                                {% endif %}
-
-                            </span>
-
+                            <span class="mature-card-badge">18+</span>
                         {% endif %}
 
-                        {% if item["tmdb_rating"] %}
-
-                            <span class="rating-badge">
-                                ★
-                                {{
-                                    "%.1f"
-                                    | format(item["tmdb_rating"])
-                                }}
+                        <span class="media-card-overlay">
+                            <span class="media-card-play">
+                                <i class="bi bi-play-fill"></i>
                             </span>
-
-                        {% endif %}
-
+                            <span>Ver ficha</span>
+                        </span>
                     </div>
 
                     <div class="media-card-info">
+                        <h3>{{ item["title"] }}</h3>
 
-                        <h2>
-                            {{ item["title"] }}
-                        </h2>
+                        <div class="media-card-meta">
+                            <span>
+                                {% if item["release_year"] %}
+                                    {{ item["release_year"] }}
+                                {% else %}
+                                    Sin año
+                                {% endif %}
+                            </span>
 
-                        <p>
-                            {% if item["release_year"] %}
-                                {{ item["release_year"] }}
-                            {% else %}
-                                Año desconocido
+                            {% if item["certification"] %}
+                                <span>{{ item["certification"] }}</span>
                             {% endif %}
-                        </p>
-
+                        </div>
                     </div>
-
                 </a>
-
             {% endfor %}
-
         </section>
 
+
         {% if total_pages > 1 %}
+            <nav class="catalog-pagination" aria-label="Paginación del catálogo">
+                <div class="catalog-pagination-summary">
+                    Página <strong>{{ page }}</strong> de <strong>{{ total_pages }}</strong>
+                </div>
 
-            <nav class="pagination">
+                <div class="catalog-pagination-actions">
+                    {% if page > 1 %}
+                        <a
+                            href="{{ url_for(
+                                'catalog.catalog',
+                                type=media_type,
+                                q=search_query,
+                                genre=genre_id,
+                                sort=sort_option,
+                                per_page=per_page,
+                                page=page-1
+                            ) }}"
+                            class="pagination-button"
+                        >
+                            <i class="bi bi-arrow-left"></i>
+                            Anterior
+                        </a>
+                    {% endif %}
 
-                {% if page > 1 %}
-
-                    <a
-                        href="{{ url_for(
-                            'catalog.catalog',
-                            type=media_type,
-                            page=page - 1,
-                            q=search_query,
-                            genre=genre_id,
-                            sort=sort_option
-                        ) }}"
-                        class="pagination-button"
-                    >
-                        ← Anterior
-                    </a>
-
-                {% endif %}
-
-                <span class="pagination-current">
-                    Página {{ page }} de {{ total_pages }}
-                </span>
-
-                {% if page < total_pages %}
-
-                    <a
-                        href="{{ url_for(
-                            'catalog.catalog',
-                            type=media_type,
-                            page=page + 1,
-                            q=search_query,
-                            genre=genre_id,
-                            sort=sort_option
-                        ) }}"
-                        class="pagination-button"
-                    >
-                        Siguiente →
-                    </a>
-
-                {% endif %}
-
+                    {% if page < total_pages %}
+                        <a
+                            href="{{ url_for(
+                                'catalog.catalog',
+                                type=media_type,
+                                q=search_query,
+                                genre=genre_id,
+                                sort=sort_option,
+                                per_page=per_page,
+                                page=page+1
+                            ) }}"
+                            class="pagination-button pagination-button-primary"
+                        >
+                            Siguiente
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    {% endif %}
+                </div>
             </nav>
-
         {% endif %}
 
     {% else %}
-
         <section class="empty-state search-empty-state">
+            <span class="empty-state-icon">
+                <i class="bi bi-search"></i>
+            </span>
 
-            <h2>
-                No hemos encontrado resultados
-            </h2>
+            <h2>No encontramos resultados</h2>
 
             <p>
-                Prueba con otro título o cambia
-                el género seleccionado.
+                Prueba a cambiar el texto, el género o la ordenación.
             </p>
 
             <a
-                href="{{ url_for(
-                    'catalog.catalog',
-                    type=media_type
-                ) }}"
-                class="search-clear-empty"
+                href="{{ url_for('catalog.catalog', type=media_type) }}"
+                class="btn btn-primary"
             >
-                Ver todo el catálogo
+                Restablecer catálogo
             </a>
-
         </section>
-
     {% endif %}
 
 </main>

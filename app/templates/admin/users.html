@@ -6,14 +6,6 @@ Usuarios — Administración
 
 {% block content %}
 
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/admin_users.css'
-    ) }}"
->
-
 <main class="admin-page">
 
     <section class="admin-heading">
@@ -52,34 +44,7 @@ Usuarios — Administración
             + Crear cliente
         </a>
 
-    </section>
-
-
-    {% with messages = get_flashed_messages(
-        with_categories=true
-    ) %}
-
-        {% if messages %}
-
-            <section class="admin-messages">
-
-                {% for category, message in messages %}
-
-                    <div
-                        class="admin-message
-                        admin-message-{{ category }}"
-                    >
-                        {{ message }}
-                    </div>
-
-                {% endfor %}
-
-            </section>
-
-        {% endif %}
-
-    {% endwith %}
-
+    </section> 
 
     <section
         class="admin-stat-grid

@@ -1,192 +1,101 @@
 {% extends "base.html" %}
 
-{% block title %}
-{{ media["title"] }} — Netflix del Temu
-{% endblock %}
-
+{% block title %}{{ media["title"] }} — Netflix del Temu{% endblock %}
 
 {% block content %}
-
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/content_controls.css'
-    ) }}"
->
-
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/activity.css'
-    ) }}"
->
-
 <main class="detail-page">
 
     {% if media["backdrop_path"] %}
-
         <div
             class="detail-backdrop"
-            style="
-                background-image:
-                linear-gradient(
-                    to bottom,
-                    rgba(17, 24, 39, 0.25),
-                    rgba(17, 24, 39, 1)
-                ),
-                url('{{ media["backdrop_path"]
-                    | tmdb_image("w1280") }}');
-            "
+            style="background-image: url('{{ media['backdrop_path'] | tmdb_image('w1280') }}');"
         ></div>
-
     {% endif %}
 
-
     <section class="detail-content">
-
         <div class="detail-poster">
-
             {% if media["poster_path"] %}
-
                 <img
-                    src="{{ media['poster_path']
-                        | tmdb_image('w500') }}"
+                    src="{{ media['poster_path'] | tmdb_image('w500') }}"
                     alt="Portada de {{ media['title'] }}"
                 >
-
             {% else %}
-
                 <div class="poster-placeholder">
-                    Sin portada
+                    <i class="bi bi-image"></i>
+                    <span>Sin portada</span>
                 </div>
-
             {% endif %}
-
         </div>
 
-
         <div class="detail-info">
-
             <a
-                href="{{ url_for(
-                    'catalog.catalog',
-                    type=media['media_type']
-                ) }}"
+                href="{{ url_for('catalog.catalog', type=media['media_type']) }}"
                 class="detail-back-link"
             >
-                ← Volver al catálogo
+                <i class="bi bi-arrow-left"></i>
+                Volver al catálogo
             </a>
 
-
             <p class="eyebrow">
-
-                {% if media["media_type"] == "movie" %}
-                    PELÍCULA
-                {% else %}
-                    SERIE
-                {% endif %}
-
+                {% if media["media_type"] == "movie" %}PELÍCULA{% else %}SERIE{% endif %}
             </p>
 
-
             {% if media["content_level"] == "mature" %}
-
                 <div class="mature-detail-badge">
-
+                    <i class="bi bi-shield-exclamation"></i>
                     Contenido maduro
-
-                    {% if media["certification"] %}
-                        · {{ media["certification"] }}
-                    {% endif %}
-
+                    {% if media["certification"] %}· {{ media["certification"] }}{% endif %}
                 </div>
-
             {% endif %}
 
+            <h1 class="detail-title">{{ media["title"] }}</h1>
 
-            <h1 class="detail-title">
-                {{ media["title"] }}
-            </h1>
-
-
-            {% if
-                media["original_title"]
-                and media["original_title"] != media["title"]
-            %}
-
-                <p class="original-title">
-                    {{ media["original_title"] }}
-                </p>
-
+            {% if media["original_title"] and media["original_title"] != media["title"] %}
+                <p class="original-title">{{ media["original_title"] }}</p>
             {% endif %}
-
 
             <div class="detail-meta">
-
                 {% if media["release_date"] %}
-
-                    <span>
-                        {{ media["release_date"] | date_es }}
-                    </span>
-
+                    <span><i class="bi bi-calendar3"></i> {{ media["release_date"] | date_es }}</span>
+                {% elif media["release_year"] %}
+                    <span><i class="bi bi-calendar3"></i> {{ media["release_year"] }}</span>
                 {% endif %}
-
 
                 {% if media["runtime_minutes"] %}
-
-                    <span>
-                        {{ media["runtime_minutes"] }} min
-                    </span>
-
+                    <span><i class="bi bi-clock"></i> {{ media["runtime_minutes"] }} min</span>
                 {% endif %}
-
 
                 {% if media["tmdb_rating"] %}
-
-                    <span>
-                        ★
-                        {{
-                            "%.1f"
-                            | format(media["tmdb_rating"])
-                        }}/10
+                    <span class="text-rating">
+                        <i class="bi bi-star-fill"></i>
+                        {{ "%.1f" | format(media["tmdb_rating"]) }}/10
                     </span>
-
                 {% endif %}
-
             </div>
 
 
             {% if media["media_type"] == "series" and series_progress %}
-
                 <section
-                    class="series-challenge
-                    {% if series_progress['completed'] %}
-                        series-challenge-completed
-                    {% endif %}"
+                    class="series-challenge {% if series_progress['completed'] %}series-challenge-completed{% endif %}"
                 >
                     <div class="series-challenge-copy">
-                        <p class="series-challenge-label">RETO DE SERIE</p>
+                        <p class="series-challenge-label">PROGRESO DE SERIE</p>
 
                         {% if series_progress["completed"] %}
-                            <h2>✓ Serie completada</h2>
+                            <h2><i class="bi bi-trophy-fill"></i> Serie completada</h2>
                             <p>
                                 Has visto los {{ series_progress["total_episodes"] }}
                                 episodios disponibles.
                             </p>
                         {% elif series_progress["total_episodes"] %}
-                            <h2>{{ series_progress["percent"] }}% completado</h2>
+                            <h2>{{ series_progress["percent"] }} % completado</h2>
                             <p>
                                 {{ series_progress["watched_episodes"] }} de
                                 {{ series_progress["total_episodes"] }} episodios vistos
                             </p>
                         {% else %}
                             <h2>Seguimiento sin iniciar</h2>
-                            <p>
-                                Todavía no hay episodios cargados
-                                para calcular el progreso.
-                            </p>
+                            <p>No hay episodios cargados para calcular el progreso.</p>
                         {% endif %}
                     </div>
 
@@ -194,232 +103,129 @@
                         <div class="series-challenge-percent">
                             {{ series_progress["percent"] }}%
                         </div>
+
                         <div class="series-challenge-bar" aria-label="Progreso de la serie">
                             <span style="width: {{ series_progress['percent'] }}%;"></span>
                         </div>
                     {% endif %}
                 </section>
-
             {% endif %}
 
-            <div class="detail-user-actions">
 
+            <div class="detail-user-actions">
                 <form
                     method="post"
-                    action="{{ url_for(
-                        'activity.toggle_favorite',
-                        media_id=media['id']
-                    ) }}"
+                    action="{{ url_for('activity.toggle_favorite', media_id=media['id']) }}"
                 >
-
-                    <input
-                        type="hidden"
-                        name="return_to"
-                        value="detail"
-                    >
+                    <input type="hidden" name="return_to" value="detail">
 
                     <button
                         type="submit"
-                        class="activity-button
-                        {% if is_favorite %}
-                            activity-button-active
-                        {% endif %}"
+                        class="activity-button {% if is_favorite %}activity-button-active{% endif %}"
                     >
-                        {% if is_favorite %}
-                            ♥ En favoritos
-                        {% else %}
-                            ♡ Añadir a favoritos
-                        {% endif %}
+                        <i class="bi {% if is_favorite %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+                        {% if is_favorite %}En favoritos{% else %}Añadir a favoritos{% endif %}
                     </button>
-
                 </form>
 
-
                 {% if media["media_type"] == "movie" %}
-
                     <form
                         method="post"
-                        action="{{ url_for(
-                            'activity.toggle_movie_watched',
-                            media_id=media['id']
-                        ) }}"
+                        action="{{ url_for('activity.toggle_movie_watched', media_id=media['id']) }}"
                     >
-
-                        <input
-                            type="hidden"
-                            name="return_to"
-                            value="detail"
-                        >
+                        <input type="hidden" name="return_to" value="detail">
 
                         <button
                             type="submit"
-                            class="activity-button
-                            {% if movie_watched %}
-                                activity-button-active
-                            {% endif %}"
+                            class="activity-button {% if movie_watched %}activity-button-active{% endif %}"
                         >
-                            {% if movie_watched %}
-                                ✓ Película vista
-                            {% else %}
-                                Marcar como vista
-                            {% endif %}
+                            <i class="bi {% if movie_watched %}bi-check-circle-fill{% else %}bi-check2-circle{% endif %}"></i>
+                            {% if movie_watched %}Película vista{% else %}Marcar como vista{% endif %}
                         </button>
-
                     </form>
-
                 {% endif %}
-
             </div>
 
 
             {% if genres %}
-
                 <div class="chip-list">
-
                     {% for genre in genres %}
-
-                        <span class="chip">
-                            {{ genre["name"] }}
-                        </span>
-
+                        <span class="chip">{{ genre["name"] }}</span>
                     {% endfor %}
-
                 </div>
-
             {% endif %}
 
-
-            {% if media["overview"] %}
-
-                <p class="detail-overview">
-                    {{ media["overview"] }}
-                </p>
-
-            {% else %}
-
-                <p class="detail-overview muted">
-                    Sin descripción disponible.
-                </p>
-
-            {% endif %}
-
+            <p class="detail-overview {% if not media['overview'] %}muted{% endif %}">
+                {{ media["overview"] or "Sin descripción disponible." }}
+            </p>
 
             {% if countries %}
-
                 <div class="detail-section">
-
                     <h2>Países</h2>
-
                     <p>
                         {% for country in countries %}
-                            {{ country["name"] }}
-                            {% if not loop.last %} · {% endif %}
+                            {{ country["name"] }}{% if not loop.last %} · {% endif %}
                         {% endfor %}
                     </p>
-
                 </div>
-
             {% endif %}
 
-
             {% if tags %}
-
                 <div class="detail-section">
-
                     <h2>Etiquetas</h2>
 
                     <div class="chip-list secondary">
-
                         {% for tag in tags %}
-
-                            <span class="chip">
-                                {{ tag["name"] }}
-                            </span>
-
+                            <span class="chip">{{ tag["name"] }}</span>
                         {% endfor %}
-
                     </div>
-
                 </div>
-
             {% endif %}
-
         </div>
-
     </section>
 
 
     {% if media["media_type"] == "series" %}
-
         <section class="seasons-section">
-
             <div class="section-heading">
-
                 <div>
-
-                    <p class="eyebrow">
-                        EPISODIOS
-                    </p>
-
-                    <h2>
-                        Temporadas
-                    </h2>
-
+                    <p class="eyebrow">EPISODIOS</p>
+                    <h2>Temporadas</h2>
                 </div>
 
-                <span>
-                    {{ seasons | length }}
-                    temporadas
-                </span>
-
+                <span>{{ seasons | length }} temporadas</span>
             </div>
 
-
             <div class="season-grid">
-
                 {% for season in seasons %}
-
                     <a
                         href="{{ url_for(
                             'catalog.season_detail',
                             media_id=media['id'],
                             season_id=season['id']
                         ) }}"
-                        class="season-card season-card-link
-                        {% if season['is_completed'] %}
-                            season-card-completed
-                        {% endif %}"
+                        class="season-card season-card-link {% if season['is_completed'] %}season-card-completed{% endif %}"
                     >
-
                         {% if season["poster_path"] %}
-
                             <img
-                                src="{{ season['poster_path']
-                                    | tmdb_image('w342') }}"
+                                src="{{ season['poster_path'] | tmdb_image('w342') }}"
                                 alt="{{ season['name'] }}"
                                 loading="lazy"
                             >
-
                         {% else %}
-
                             <div class="season-placeholder">
-                                Sin portada
+                                <i class="bi bi-collection-play"></i>
                             </div>
-
                         {% endif %}
 
-
                         <div class="season-info">
-
-                            <h3>
-                                {{ season["name"] }}
-                            </h3>
+                            <h3>{{ season["name"] }}</h3>
 
                             {% if season["imported_episode_count"] %}
-
                                 {% if season["is_completed"] %}
-                                    <p class="season-progress season-progress-completed">
-                                        ✓ Temporada completada
+                                    <p class="season-progress-completed">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        Temporada completada
                                     </p>
                                 {% else %}
                                     <p class="season-progress">
@@ -429,47 +235,19 @@
                                         vistos
                                     </p>
                                 {% endif %}
-
                             {% else %}
-
-                                <p>
-                                    Episodios no cargados
-                                </p>
-
-                            {% endif %}
-
-                            {% if season["episode_count"] %}
-
-                                <p>
-                                    {{ season["episode_count"] }}
-                                    episodios según TMDB
-                                </p>
-
+                                <p>Episodios no cargados</p>
                             {% endif %}
 
                             {% if season["air_date"] %}
-
-                                <p>
-                                    {{
-                                        season["air_date"]
-                                        | date_es
-                                    }}
-                                </p>
-
+                                <p>{{ season["air_date"] | date_es }}</p>
                             {% endif %}
-
                         </div>
-
                     </a>
-
                 {% endfor %}
-
             </div>
-
         </section>
-
     {% endif %}
 
 </main>
-
 {% endblock %}

@@ -1,73 +1,93 @@
 {% extends "base.html" %}
 
-{% block title %}
-Netflix del Temu
-{% endblock %}
-
+{% block title %}Netflix del Temu{% endblock %}
 
 {% block content %}
-
 <main class="landing">
-
     <section class="hero">
+        <div class="hero-orbit hero-orbit-a"></div>
+        <div class="hero-orbit hero-orbit-b"></div>
 
-        <p class="eyebrow">
-            TU CATÁLOGO AUDIOVISUAL
-        </p>
+        <div class="hero-copy">
+            <p class="eyebrow">TU CATÁLOGO AUDIOVISUAL</p>
 
-        <h1>
-            Todo lo que ves.<br>
-            Todo lo que quieres ver.
-        </h1>
+            <h1>
+                Todo lo que ves,
+                <span class="hero-accent">por fin tiene memoria.</span>
+            </h1>
 
-        <p class="description">
-            Lleva el control de tus películas y series,
-            descubre nuevo contenido y consulta todo
-            tu historial audiovisual en un mismo lugar.
-        </p>
-
-        <div class="actions">
-
-            {% if current_user.is_authenticated %}
-
-                <a
-                    href="{{ url_for('catalog.catalog') }}"
-                    class="button button-primary"
-                >
-                    Ir al catálogo
-                </a>
-
-            {% else %}
-
-                <a
-                    href="{{ url_for('auth.register') }}"
-                    class="button button-primary"
-                >
-                    Crear una cuenta
-                </a>
-
-                <a
-                    href="{{ url_for('auth.login') }}"
-                    class="button button-secondary"
-                >
-                    Iniciar sesión
-                </a>
-
-            {% endif %}
-
-        </div>
-
-        {% if not current_user.is_authenticated %}
-
-            <p class="catalog-message">
-                ¿Quieres explorar nuestro catálogo?
-                Regístrate para empezar.
+            <p class="description">
+                Descubre películas y series, guarda tus favoritas, registra tu progreso
+                y transforma todo ese historial en estadísticas que sí apetece mirar.
             </p>
 
-        {% endif %}
+            <div class="actions">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('catalog.catalog') }}" class="button button-primary">
+                        <i class="bi bi-play-circle me-2"></i>Explorar catálogo
+                    </a>
+                    <a href="{{ url_for('statistics.user_profile') }}" class="button button-secondary">
+                        <i class="bi bi-person me-2"></i>Ir a mi perfil
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('auth.register') }}" class="button button-primary">
+                        Crear una cuenta
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="button button-secondary">
+                        Iniciar sesión
+                    </a>
+                {% endif %}
+            </div>
+        </div>
 
+        <div class="hero-visual" aria-hidden="true">
+            <div class="hero-stack hero-stack-one">
+                <i class="bi bi-film"></i>
+                <span>Películas</span>
+            </div>
+            <div class="hero-stack hero-stack-two">
+                <i class="bi bi-heart-fill"></i>
+                <span>Favoritos</span>
+            </div>
+            <div class="hero-stack hero-stack-three">
+                <i class="bi bi-bar-chart-fill"></i>
+                <span>Estadísticas</span>
+            </div>
+        </div>
     </section>
 
-</main>
+    <section class="landing-features" aria-label="Funciones principales">
+        <article class="landing-feature feature-movies">
+            <i class="bi bi-film"></i>
+            <div>
+                <strong>Catálogo</strong>
+                <span>Películas y series con filtros, géneros y fichas completas.</span>
+            </div>
+        </article>
 
+        <article class="landing-feature feature-favorites">
+            <i class="bi bi-heart-fill"></i>
+            <div>
+                <strong>Biblioteca personal</strong>
+                <span>Favoritos, vistos y progreso de temporadas.</span>
+            </div>
+        </article>
+
+        <article class="landing-feature feature-stats">
+            <i class="bi bi-graph-up-arrow"></i>
+            <div>
+                <strong>Tu historia en datos</strong>
+                <span>Tiempo, géneros, ritmo mensual y evolución.</span>
+            </div>
+        </article>
+
+        <article class="landing-feature feature-admin">
+            <i class="bi bi-speedometer2"></i>
+            <div>
+                <strong>Administración</strong>
+                <span>Gestión de usuarios, catálogo y estadísticas globales.</span>
+            </div>
+        </article>
+    </section>
+</main>
 {% endblock %}

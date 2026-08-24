@@ -1,196 +1,211 @@
 {% extends "base.html" %}
 
-{% block title %}
-Mi resumen — Netflix del Temu
-{% endblock %}
+{% block title %}Mis estadísticas — Netflix del Temu{% endblock %}
 
 {% block content %}
+<main class="statistics-page">
 
-<link
-    rel="stylesheet"
-    href="{{ url_for('static', filename='css/statistics.css') }}"
->
-
-<main class="wrapped-page">
-
-    <section class="wrapped-hero">
-        <div class="wrapped-shape wrapped-shape-a"></div>
-        <div class="wrapped-shape wrapped-shape-b"></div>
-
-        <div class="wrapped-hero-content">
-            <a class="wrapped-back" href="{{ url_for('statistics.user_profile') }}">
-                ← Volver al perfil
+    <section class="statistics-hero">
+        <div>
+            <a class="statistics-back" href="{{ url_for('statistics.user_profile') }}">
+                <i class="bi bi-arrow-left"></i>
+                Volver al perfil
             </a>
 
-            <p class="wrapped-eyebrow">TU ACTIVIDAD HASTA AHORA</p>
+            <p class="eyebrow">TU HISTORIA HASTA AHORA</p>
 
             <h1>
-                Tu historia<br>
-                <span>en números.</span>
+                Lo que ves también
+                <span>cuenta una historia.</span>
             </h1>
 
-            <p class="wrapped-intro">
-                Un resumen vivo de lo que has marcado como visto.
-                Se actualiza cada vez que registras una película o episodio.
+            <p>
+                Un resumen vivo de tus películas, series, episodios y hábitos.
+                Cada nuevo registro cambia los números.
             </p>
         </div>
 
-        <div class="wrapped-main-number">
+        <article class="statistics-time-card">
             <span>TIEMPO REGISTRADO</span>
             <strong>{{ overview["total_time_text"] }}</strong>
-            <small>viendo contenido</small>
-        </div>
-    </section>
-
-
-    <section class="wrapped-story-grid">
-
-        <article class="wrapped-story purple">
-            <span class="story-index">01</span>
-            <p>Has visto</p>
-            <strong>{{ overview["watched_movies"] }}</strong>
-            <h2>películas</h2>
-            <small>{{ overview["movie_time_text"] }} de reproducción registrada</small>
-        </article>
-
-        <article class="wrapped-story orange">
-            <span class="story-index">02</span>
-            <p>Has empezado</p>
-            <strong>{{ overview["started_series"] }}</strong>
-            <h2>series</h2>
-            <small>{{ overview["watched_episodes"] }} episodios vistos</small>
-        </article>
-
-        <article class="wrapped-story green">
-            <span class="story-index">03</span>
-            <p>Has completado</p>
-            <strong>{{ overview["completed_series"] }}</strong>
-            <h2>series al 100 %</h2>
-            <small>según los episodios disponibles en tu base de datos</small>
-        </article>
-
-        <article class="wrapped-story pink">
-            <span class="story-index">04</span>
-            <p>Tienes guardados</p>
-            <strong>{{ overview["favorites"] }}</strong>
-            <h2>favoritos</h2>
             <small>entre películas y series</small>
-        </article>
 
+            <div class="statistics-time-split">
+                <span>
+                    <i class="bi bi-film"></i>
+                    {{ overview["movie_time_text"] }}
+                </span>
+                <span>
+                    <i class="bi bi-tv"></i>
+                    {{ overview["series_time_text"] }}
+                </span>
+            </div>
+        </article>
     </section>
 
 
-    <section class="wrapped-split-section">
+    <section class="statistics-metrics">
+        <article class="statistics-metric metric-movies">
+            <i class="bi bi-film"></i>
+            <small>Películas vistas</small>
+            <strong>{{ overview["watched_movies"] }}</strong>
+            <span>{{ overview["movie_time_text"] }}</span>
+        </article>
 
-        <article class="wrapped-panel time-panel">
-            <div class="wrapped-panel-copy">
-                <span>¿DÓNDE SE TE VA EL TIEMPO?</span>
+        <article class="statistics-metric metric-series">
+            <i class="bi bi-tv"></i>
+            <small>Series empezadas</small>
+            <strong>{{ overview["started_series"] }}</strong>
+            <span>{{ overview["watched_episodes"] }} episodios</span>
+        </article>
+
+        <article class="statistics-metric metric-completed">
+            <i class="bi bi-trophy"></i>
+            <small>Series completadas</small>
+            <strong>{{ overview["completed_series"] }}</strong>
+            <span>al 100 %</span>
+        </article>
+
+        <article class="statistics-metric metric-favorites">
+            <i class="bi bi-heart-fill"></i>
+            <small>Favoritos</small>
+            <strong>{{ overview["favorites"] }}</strong>
+            <span>guardados</span>
+        </article>
+
+        <article class="statistics-metric metric-records">
+            <i class="bi bi-collection-play"></i>
+            <small>Registros</small>
+            <strong>{{ overview["watched_movies"] + overview["watched_episodes"] }}</strong>
+            <span>películas + episodios</span>
+        </article>
+    </section>
+
+
+    <section class="statistics-grid">
+        <article class="statistics-panel statistics-panel-time">
+            <div class="statistics-panel-copy">
+                <span class="statistics-panel-label">DISTRIBUCIÓN</span>
                 <h2>{{ overview["dominant_label"] }}</h2>
                 <p>
-                    {{ overview["dominant_percent"] }} % de tu tiempo registrado
+                    {{ overview["dominant_percent"] }} % del tiempo registrado
                     pertenece a {{ overview["dominant_label"] | lower }}.
                 </p>
 
-                <div class="time-lines">
+                <div class="statistics-legend-list">
                     <div>
+                        <span class="legend-dot legend-movie"></span>
                         <span>Películas</span>
                         <strong>{{ overview["movie_time_text"] }}</strong>
                     </div>
+
                     <div>
+                        <span class="legend-dot legend-series"></span>
                         <span>Series</span>
                         <strong>{{ overview["series_time_text"] }}</strong>
                     </div>
                 </div>
             </div>
 
-            <div class="wrapped-chart wrapped-doughnut">
-                <canvas id="timeChart"></canvas>
+            <div class="statistics-chart statistics-chart-doughnut">
+                <canvas
+                    id="timeChart"
+                    role="img"
+                    aria-label="Distribución del tiempo entre películas y series"
+                ></canvas>
             </div>
         </article>
 
 
-        <article class="wrapped-panel genre-panel">
-            <div class="wrapped-panel-copy">
-                <span>TU GÉNERO MÁS PRESENTE</span>
+        <article class="statistics-panel statistics-panel-genres">
+            <div class="statistics-panel-copy">
+                <span class="statistics-panel-label">TUS GÉNEROS</span>
 
                 {% if chart_data["genres"]["labels"] %}
                     <h2>{{ chart_data["genres"]["labels"][0] }}</h2>
                     <p>
-                        Es el género que más aparece entre las películas
-                        y series que has registrado como vistas.
+                        Es el género más presente entre el contenido
+                        que has registrado como visto.
                     </p>
                 {% else %}
                     <h2>Sin datos todavía</h2>
                     <p>
-                        Cuando registres contenido con géneros asociados,
-                        aparecerá aquí tu tendencia principal.
+                        Registra contenido para descubrir qué géneros
+                        dominan tu historial.
                     </p>
                 {% endif %}
             </div>
 
             {% if chart_data["genres"]["labels"] %}
-                <div class="wrapped-chart wrapped-genres">
-                    <canvas id="genreChart"></canvas>
+                <div class="statistics-chart statistics-chart-genres">
+                    <canvas
+                        id="genreChart"
+                        role="img"
+                        aria-label="Géneros más presentes en el historial"
+                    ></canvas>
                 </div>
             {% endif %}
         </article>
 
+
+        <article class="statistics-panel statistics-panel-monthly">
+            <div class="statistics-panel-copy">
+                <span class="statistics-panel-label">TU RITMO</span>
+                <h2>Actividad por mes</h2>
+                <p>
+                    Cómo se reparte tu actividad reciente entre
+                    películas y episodios.
+                </p>
+            </div>
+
+            {% if chart_data["monthly"]["labels"] %}
+                <div class="statistics-chart statistics-chart-monthly">
+                    <canvas
+                        id="monthlyChart"
+                        role="img"
+                        aria-label="Actividad mensual de películas y episodios vistos"
+                    ></canvas>
+                </div>
+            {% else %}
+                <div class="statistics-empty">
+                    Todavía no hay actividad mensual suficiente.
+                </div>
+            {% endif %}
+        </article>
     </section>
 
 
-    <section class="wrapped-panel activity-panel">
-        <div class="wrapped-panel-copy">
-            <span>TU RITMO</span>
-            <h2>Actividad por mes</h2>
-            <p>
-                Películas y episodios que has marcado como vistos
-                en los meses con actividad registrada.
-            </p>
-        </div>
-
-        {% if chart_data["monthly"]["labels"] %}
-            <div class="wrapped-chart wrapped-monthly">
-                <canvas id="monthlyChart"></canvas>
+    <section class="statistics-insights">
+        <article class="statistics-insight insight-completion">
+            <i class="bi bi-award"></i>
+            <div>
+                <span>PROGRESO DE SERIES</span>
+                <strong>{{ overview["completed_series"] }}/{{ overview["started_series"] }}</strong>
+                <p>completadas frente a series empezadas</p>
             </div>
-        {% else %}
-            <div class="wrapped-empty">
-                Todavía no hay actividad mensual suficiente.
+        </article>
+
+        <article class="statistics-insight insight-method">
+            <i class="bi bi-calculator"></i>
+            <div>
+                <span>CÓMO SE CALCULA</span>
+                <p>
+                    Las películas usan su duración almacenada. Las series suman
+                    la duración de cada episodio marcado como visto.
+                </p>
             </div>
-        {% endif %}
-    </section>
-
-
-    <section class="wrapped-final-grid">
-
-        <article class="wrapped-final-card blue">
-            <span>REGISTROS</span>
-            <strong>{{ overview["watched_movies"] + overview["watched_episodes"] }}</strong>
-            <p>películas y episodios marcados como vistos</p>
         </article>
-
-        <article class="wrapped-final-card yellow">
-            <span>SERIES</span>
-            <strong>{{ overview["completed_series"] }}/{{ overview["started_series"] }}</strong>
-            <p>completadas frente a series empezadas</p>
-        </article>
-
-        <article class="wrapped-final-card dark">
-            <span>CÁLCULO DEL TIEMPO</span>
-            <p>
-                Las películas usan su duración almacenada. Las series suman
-                la duración de cada episodio marcado como visto. Un registro
-                sin duración aporta 0 minutos hasta disponer de ese dato.
-            </p>
-        </article>
-
     </section>
 
 </main>
+{% endblock %}
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+{% block vendor_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block page_data %}
 <script>
     window.statisticsData = {{ chart_data | tojson }};
 </script>
-<script src="{{ url_for('static', filename='js/statistics.js') }}"></script>
-
 {% endblock %}

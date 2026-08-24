@@ -6,22 +6,6 @@ Catálogo — Administración
 
 {% block content %}
 
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/admin_users.css'
-    ) }}"
->
-
-<link
-    rel="stylesheet"
-    href="{{ url_for(
-        'static',
-        filename='css/admin_catalog.css'
-    ) }}"
->
-
 <main class="admin-page">
 
     <section class="admin-heading">
@@ -61,33 +45,6 @@ Catálogo — Administración
         </a>
 
     </section>
-
-
-    {% with messages = get_flashed_messages(
-        with_categories=true
-    ) %}
-
-        {% if messages %}
-
-            <section class="admin-messages">
-
-                {% for category, message in messages %}
-
-                    <div
-                        class="admin-message
-                        admin-message-{{ category }}"
-                    >
-                        {{ message }}
-                    </div>
-
-                {% endfor %}
-
-            </section>
-
-        {% endif %}
-
-    {% endwith %}
-
 
     <section class="admin-media-stats">
 
@@ -131,7 +88,6 @@ Catálogo — Administración
             >
         </label>
 
-
         <label>
             <span>Tipo</span>
 
@@ -164,7 +120,6 @@ Catálogo — Administración
                 </option>
             </select>
         </label>
-
 
         <label>
             <span>Estado</span>

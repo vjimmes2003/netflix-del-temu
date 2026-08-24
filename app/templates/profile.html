@@ -1,135 +1,147 @@
 {% extends "base.html" %}
 
-{% block title %}
-Mi perfil — Netflix del Temu
-{% endblock %}
+{% block title %}Mi perfil — Netflix del Temu{% endblock %}
 
 {% block content %}
-
-<link
-    rel="stylesheet"
-    href="{{ url_for('static', filename='css/profile.css') }}"
->
-
 <main class="profile-page">
 
     <section class="profile-hero">
-
-        <div class="profile-hero-orb profile-orb-one"></div>
-        <div class="profile-hero-orb profile-orb-two"></div>
+        <div class="profile-hero-glow profile-hero-glow-a"></div>
+        <div class="profile-hero-glow profile-hero-glow-b"></div>
 
         <div class="profile-identity">
-
             <div class="profile-avatar">
                 {{ profile_initials }}
             </div>
 
             <div>
-                <p class="profile-kicker">TU ESPACIO</p>
+                <p class="eyebrow">TU ESPACIO</p>
                 <h1>{{ current_user.display_name or current_user.username }}</h1>
-                <p class="profile-handle">@{{ current_user.username }}</p>
-                <p class="profile-email">{{ current_user.email }}</p>
+                <div class="profile-user-meta">
+                    <span>@{{ current_user.username }}</span>
+                    <span>{{ current_user.email }}</span>
+                </div>
             </div>
-
         </div>
 
-        <div class="profile-hero-stat">
-            <span>TIEMPO REGISTRADO</span>
+        <div class="profile-total-time">
+            <span>Tiempo registrado</span>
             <strong>{{ overview["total_time_text"] }}</strong>
             <small>entre películas y episodios vistos</small>
         </div>
-
     </section>
 
 
-    <section class="profile-snapshot">
-
-        <article class="profile-number-card violet">
-            <span>Películas</span>
-            <strong>{{ overview["watched_movies"] }}</strong>
-            <small>vistas</small>
+    <section class="profile-metrics">
+        <article class="profile-metric metric-movies">
+            <span class="profile-metric-icon"><i class="bi bi-film"></i></span>
+            <div>
+                <small>Películas</small>
+                <strong>{{ overview["watched_movies"] }}</strong>
+                <span>vistas</span>
+            </div>
         </article>
 
-        <article class="profile-number-card pink">
-            <span>Series</span>
-            <strong>{{ overview["started_series"] }}</strong>
-            <small>empezadas</small>
+        <article class="profile-metric metric-series">
+            <span class="profile-metric-icon"><i class="bi bi-tv"></i></span>
+            <div>
+                <small>Series</small>
+                <strong>{{ overview["started_series"] }}</strong>
+                <span>empezadas</span>
+            </div>
         </article>
 
-        <article class="profile-number-card cyan">
-            <span>Episodios</span>
-            <strong>{{ overview["watched_episodes"] }}</strong>
-            <small>vistos</small>
+        <article class="profile-metric metric-episodes">
+            <span class="profile-metric-icon"><i class="bi bi-collection-play"></i></span>
+            <div>
+                <small>Episodios</small>
+                <strong>{{ overview["watched_episodes"] }}</strong>
+                <span>vistos</span>
+            </div>
         </article>
 
-        <article class="profile-number-card lime">
-            <span>Completadas</span>
-            <strong>{{ overview["completed_series"] }}</strong>
-            <small>series al 100 %</small>
+        <article class="profile-metric metric-completed">
+            <span class="profile-metric-icon"><i class="bi bi-trophy"></i></span>
+            <div>
+                <small>Completadas</small>
+                <strong>{{ overview["completed_series"] }}</strong>
+                <span>series al 100 %</span>
+            </div>
         </article>
-
     </section>
 
 
-    <section class="profile-feature-grid">
-
+    <section class="profile-dashboard">
         <a
             class="profile-feature profile-feature-stats"
             href="{{ url_for('statistics.user_statistics') }}"
         >
-            <div>
+            <div class="profile-feature-top">
+                <span class="profile-feature-icon"><i class="bi bi-stars"></i></span>
                 <span class="profile-feature-label">TU RESUMEN</span>
-                <h2>Mis estadísticas</h2>
-                <p>
-                    Tu actividad convertida en colores, gráficos
-                    y datos que puedes consultar cuando quieras.
-                </p>
             </div>
 
-            <div class="profile-feature-big">
-                {{ overview["total_time_text"] }}
-            </div>
+            <h2>Tu actividad, convertida en historia.</h2>
 
-            <span class="profile-feature-action">Ver resumen →</span>
+            <p>
+                Tiempo de reproducción, géneros, ritmo mensual y evolución
+                de todo lo que has marcado como visto.
+            </p>
+
+            <div class="profile-feature-footer">
+                <strong>{{ overview["total_time_text"] }}</strong>
+                <span>Ver estadísticas <i class="bi bi-arrow-right"></i></span>
+            </div>
         </a>
 
         <a
             class="profile-feature profile-feature-favorites"
             href="{{ url_for('activity.favorites') }}"
         >
-            <span class="profile-feature-label">GUARDADOS</span>
+            <div class="profile-feature-top">
+                <span class="profile-feature-icon"><i class="bi bi-heart-fill"></i></span>
+                <span class="profile-feature-label">GUARDADOS</span>
+            </div>
+
             <h2>Favoritos</h2>
-            <strong>{{ overview["favorites"] }}</strong>
+            <strong class="profile-feature-number">{{ overview["favorites"] }}</strong>
             <p>películas y series guardadas</p>
-            <span class="profile-feature-action">Abrir favoritos →</span>
+            <span class="profile-feature-link">Abrir favoritos <i class="bi bi-arrow-right"></i></span>
         </a>
 
         <a
             class="profile-feature profile-feature-watched"
             href="{{ url_for('activity.watched') }}"
         >
-            <span class="profile-feature-label">HISTORIAL</span>
+            <div class="profile-feature-top">
+                <span class="profile-feature-icon"><i class="bi bi-check2-circle"></i></span>
+                <span class="profile-feature-label">HISTORIAL</span>
+            </div>
+
             <h2>Vistos</h2>
-            <strong>{{ overview["watched_movies"] + overview["watched_episodes"] }}</strong>
+            <strong class="profile-feature-number">
+                {{ overview["watched_movies"] + overview["watched_episodes"] }}
+            </strong>
             <p>películas y episodios registrados</p>
-            <span class="profile-feature-action">Abrir vistos →</span>
+            <span class="profile-feature-link">Abrir vistos <i class="bi bi-arrow-right"></i></span>
         </a>
 
         <a
             class="profile-feature profile-feature-settings"
             href="{{ url_for('catalog.content_settings') }}"
         >
-            <span class="profile-feature-label">CUENTA</span>
+            <div class="profile-feature-top">
+                <span class="profile-feature-icon"><i class="bi bi-sliders2"></i></span>
+                <span class="profile-feature-label">CUENTA</span>
+            </div>
+
             <h2>Preferencias</h2>
             <p>
-                Gestiona la visibilidad del contenido maduro
-                de tu catálogo.
+                Gestiona la visibilidad del contenido maduro de tu catálogo.
             </p>
-            <span class="profile-feature-action">Abrir preferencias →</span>
+            <span class="profile-feature-link">Abrir preferencias <i class="bi bi-arrow-right"></i></span>
         </a>
-
     </section>
 
 </main>
-
 {% endblock %}
