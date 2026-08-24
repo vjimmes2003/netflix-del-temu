@@ -3,39 +3,39 @@ NETFLIX DEL TEMU — FASE 13 — RESULTADOS AUTOMÁTICOS
 ========================================================================
 
 [PASS] 1. Compilación Python (0.01s)
-[PASS] 2. Copia segura de SQLite (0.56s)
-[PASS] 3. Integridad SQLite inicial (1.13s)
+[PASS] 2. Copia segura de SQLite (0.53s)
+[PASS] 3. Integridad SQLite inicial (1.20s)
 [PASS] 4. Esquema de 16 tablas (0.00s)
-[PASS] 5. Preparación de usuarios de prueba (0.08s)
+[PASS] 5. Preparación de usuarios de prueba (0.09s)
 [PASS] 6. Descubrimiento de contenido (0.00s)
-[PASS] 7. Creación de Flask de testing (0.13s)
+[PASS] 7. Creación de Flask de testing (0.14s)
 [PASS] 8. Plantillas Jinja (0.13s)
-[PASS] 9. Assets CSS/JS (0.12s)
+[PASS] 9. Assets CSS/JS (0.11s)
 [PASS] 10. Mapa de rutas Flask (0.00s)
 [PASS] 11. Rutas públicas y 404 (0.00s)
 [PASS] 12. Protección de rutas (0.01s)
 [PASS] 13. Validaciones de registro (0.00s)
-[PASS] 14. Registro y duplicados (0.10s)
+[PASS] 14. Registro y duplicados (0.09s)
 [PASS] 15. Login activo/inactivo/admin (0.31s)
 [PASS] 16. Logout solo por POST (0.08s)
-[PASS] 17. Permisos cliente/admin (0.47s)
-[PASS] 18. Catálogo, filtros y seguridad (0.21s)
-[PASS] 19. Fichas y temporadas (0.09s)
-[PASS] 20. Política mature/explicit (0.26s)
-[PASS] 21. Favoritos y películas vistas (0.13s)
-[PASS] 22. Episodios y temporadas vistas (0.12s)
-[PASS] 23. Perfil y estadísticas cliente (0.81s)
+[PASS] 17. Permisos cliente/admin (0.53s)
+[PASS] 18. Catálogo, filtros y seguridad (0.27s)
+[PASS] 19. Fichas y temporadas (0.11s)
+[PASS] 20. Política mature/explicit (0.29s)
+[PASS] 21. Favoritos y películas vistas (0.15s)
+[PASS] 22. Episodios y temporadas vistas (0.13s)
+[PASS] 23. Perfil y estadísticas cliente (0.85s)
 [PASS] 24. CRUD administrativo de usuarios (0.18s)
 [PASS] 25. CRUD administrativo película (0.12s)
 [PASS] 26. Creación administrativa serie (0.09s)
-[PASS] 27. Filtros y estadísticas admin (0.94s)
-[PASS] 28. Generador de 100 usuarios demo (1.10s)
-[PASS] 29. Integridad SQLite final (1.02s)
+[PASS] 27. Filtros y estadísticas admin (0.95s)
+[PASS] 28. Generador de 100 usuarios demo (1.22s)
+[PASS] 29. Integridad SQLite final (1.14s)
 
 ------------------------------------------------------------------------
 PASS: 29 | FAIL: 0 | SKIP: 0
 
 Notas:
-- Generador 100 usuarios: 0.95s, 3322 registros de películas, 7877 episodios.
-- /admin/statistics con 100 demo: 0.06s.
+- Generador 100 usuarios: 1.06s, 3322 registros de películas, 7877 episodios.
+- /admin/statistics con 100 demo: 0.08s.
 ========================================================================

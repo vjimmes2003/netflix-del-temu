@@ -332,6 +332,7 @@ textarea {
     position: relative;
     isolation: isolate;
     overflow: hidden;
+    padding: 9rem 6vw 5rem;
 }
 
 .landing::before,
@@ -368,6 +369,15 @@ textarea {
     width: min(1050px, 100%);
 }
 
+.hero h1 {
+    max-width: 1000px;
+    margin: 0 0 1.4rem;
+    font-size: clamp(3.5rem, 7vw, 7.4rem);
+    font-weight: 850;
+    line-height: .88;
+    letter-spacing: -.065em;
+    text-wrap: balance;
+}
 
 .description {
     max-width: 720px;
@@ -520,9 +530,15 @@ textarea {
 }
 
 
+.hero-accent {
+    color: #b9c8ff;
+}
 
 .landing-features {
+    display: flex;
     flex-wrap: wrap;
+    gap: .65rem 1.2rem;
+    margin-top: 2rem;
     color: #8f9bb2;
     font-size: .82rem;
     font-weight: 650;
@@ -677,6 +693,7 @@ textarea {
    ========================================================================== */
 
 .landing {
+    width: min(94vw, 1720px);
     margin-inline: auto;
     padding: 8.5rem 0 4rem;
 }
@@ -818,6 +835,7 @@ textarea {
     display: flex;
     align-items: flex-start;
     gap: 1rem;
+    min-height: 130px;
     padding: 1.35rem;
     border: 1px solid var(--app-border);
     border-radius: 1.25rem;
@@ -1480,6 +1498,8 @@ textarea {
    ========================================================================== */
 
 .detail-page {
+    position: relative;
+    isolation: isolate;
     min-height: 100vh;
     padding-bottom: 5rem;
 }
@@ -1487,11 +1507,17 @@ textarea {
 .detail-backdrop {
     position: absolute;
     inset: 0 0 auto;
-    z-index: -1;
+    z-index: 0;
     width: 100%;
     height: min(76vh, 780px);
+    pointer-events: none;
     background-position: center;
     background-size: cover;
+}
+
+.detail-content {
+    position: relative;
+    z-index: 1;
 }
 
 .detail-backdrop::after {
@@ -1975,10 +2001,13 @@ textarea {
 
 .profile-metric {
     display: flex;
+    align-items: center;
     gap: 1rem;
     min-height: 125px;
+    padding: 1.15rem;
     border: 1px solid var(--app-border);
     border-radius: 1.15rem;
+    background: rgba(18,26,43,.80);
 }
 
 .profile-metric-icon {
@@ -3298,6 +3327,7 @@ textarea {
 .admin-form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .85rem;
     padding: 1.2rem;
 }
 
@@ -3347,8 +3377,13 @@ textarea {
 .admin-statistics-chart-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    gap: .8rem;
+    margin: .8rem 0;
 }
 
+.admin-statistics-panel {
+    padding: 1rem;
+}
 
 .admin-statistics-panel-heading h2,
 .admin-comparison-heading h2 {
@@ -3372,6 +3407,11 @@ textarea {
     display: flex;
     justify-content: space-between;
     gap: 1rem;
+    margin: .8rem 0;
+    padding: 1rem;
+    background:
+        radial-gradient(circle at 90% 20%, rgba(var(--app-violet-rgb), .12), transparent 30%),
+        rgba(18,26,43,.80);
 }
 
 .admin-top-client-number {
@@ -3737,6 +3777,9 @@ textarea {
     min-width: 920px;
 }
 
+.admin-media-title-cell {
+    min-width: 240px;
+}
 
 .admin-media-title-cell strong,
 .admin-media-title-cell small,
@@ -3885,6 +3928,9 @@ textarea {
     text-align: center !important;
 }
 
+.admin-statistics-page {
+    width: 100%;
+}
 
 .admin-statistics-card-wide {
     background:
@@ -3892,6 +3938,9 @@ textarea {
         rgba(18,26,43,.80);
 }
 
+.admin-comparison-section {
+    margin-top: 1rem;
+}
 
 .admin-comparison-heading {
     display: flex;
@@ -3932,7 +3981,7 @@ textarea {
 
 
 /* ==========================================================================
-   FINAL POLISH — REVIEWED DESKTOP LAYOUTS
+   FASE 12C — REVIEW CORRECTIONS
    Ajustes derivados de la revisión visual completa en escritorio.
    ========================================================================== */
 
