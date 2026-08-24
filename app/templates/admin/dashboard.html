@@ -14,6 +14,14 @@ Administración — Netflix del Temu
     ) }}"
 >
 
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/admin_statistics.css'
+    ) }}"
+>
+
 <main class="admin-page">
 
     <section class="admin-heading">
@@ -89,7 +97,7 @@ Administración — Netflix del Temu
     </section>
 
 
-    <section class="admin-module-grid">
+    <section class="admin-module-grid admin-module-grid-three">
 
         <a
             href="{{ url_for(
@@ -136,6 +144,33 @@ Administración — Netflix del Temu
                 <p>
                     Crear, editar, eliminar
                     y restaurar películas y series.
+                </p>
+            </div>
+
+            <span class="admin-module-arrow">
+                →
+            </span>
+        </a>
+
+
+        <a
+            href="{{ url_for(
+                'admin.statistics'
+            ) }}"
+            class="admin-module-card"
+        >
+            <span class="admin-module-icon">
+                E
+            </span>
+
+            <div>
+                <h2>
+                    Estadísticas
+                </h2>
+
+                <p>
+                    Comparar actividad, tiempo
+                    y registros entre clientes.
                 </p>
             </div>
 

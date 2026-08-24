@@ -1977,3 +1977,481 @@ def toggle_media_visible(media_id):
             "admin.media_catalog"
         )
     )
+
+# ============================================================
+# FASE 11 — ESTADÍSTICAS ADMINISTRATIVAS
+# ============================================================
+
+ADMIN_STATS_STATUS_FILTERS = (
+    "all",
+    "active",
+    "inactive",
+)
+
+ADMIN_STATS_SORTS = (
+    "time",
+    "records",
+    "favorites",
+    "username",
+)
+
+
+def format_admin_minutes(total_minutes):
+    """Convierte minutos en una duración legible."""
+
+    total_minutes = int(
+        total_minutes or 0
+    )
+
+    hours, minutes = divmod(
+        total_minutes,
+        60,
+    )
+
+    if hours and minutes:
+        return f"{hours} h {minutes} min"
+
+    if hours:
+        return f"{hours} h"
+
+    return f"{minutes} min"
+
+
+def get_admin_client_statistics(
+    db,
+    search_query="",
+    status="all",
+    sort="time",
+):
+    """Obtiene métricas comparables de las cuentas cliente."""
+
+    where_clauses = [
+        "u.role = 'client'",
+    ]
+
+    params = []
+
+    if search_query:
+        search_value = (
+            f"%{search_query}%"
+        )
+
+        where_clauses.append(
+            """
+            (
+                u.username LIKE ? COLLATE NOCASE
+                OR COALESCE(
+                    u.display_name,
+                    ''
+                ) LIKE ? COLLATE NOCASE
+                OR u.email LIKE ? COLLATE NOCASE
+            )
+            """
+        )
+
+        params.extend(
+            [
+                search_value,
+                search_value,
+                search_value,
+            ]
+        )
+
+    if status == "active":
+        where_clauses.append(
+            "u.is_active = 1"
+        )
+    elif status == "inactive":
+        where_clauses.append(
+            "u.is_active = 0"
+        )
+
+    order_by = {
+        "time": (
+            "total_minutes DESC, "
+            "total_records DESC, "
+            "u.username COLLATE NOCASE"
+        ),
+        "records": (
+            "total_records DESC, "
+            "total_minutes DESC, "
+            "u.username COLLATE NOCASE"
+        ),
+        "favorites": (
+            "favorites DESC, "
+            "total_minutes DESC, "
+            "u.username COLLATE NOCASE"
+        ),
+        "username": (
+            "u.username COLLATE NOCASE ASC"
+        ),
+    }[sort]
+
+    where_sql = " AND ".join(
+        where_clauses
+    )
+
+    rows = db.execute(
+        f"""
+        WITH movie_activity AS (
+            SELECT
+                mw.user_id,
+                COUNT(*) AS watched_movies,
+                COALESCE(
+                    SUM(
+                        COALESCE(
+                            m.runtime_minutes,
+                            0
+                        )
+                    ),
+                    0
+                ) AS movie_minutes
+            FROM movie_watches AS mw
+            JOIN media AS m
+              ON m.id = mw.media_id
+            WHERE m.media_type = 'movie'
+            GROUP BY mw.user_id
+        ),
+        episode_activity AS (
+            SELECT
+                ew.user_id,
+                COUNT(*) AS watched_episodes,
+                COUNT(
+                    DISTINCT s.media_id
+                ) AS started_series,
+                COALESCE(
+                    SUM(
+                        COALESCE(
+                            e.runtime_minutes,
+                            0
+                        )
+                    ),
+                    0
+                ) AS series_minutes
+            FROM episode_watches AS ew
+            JOIN episodes AS e
+              ON e.id = ew.episode_id
+            JOIN seasons AS s
+              ON s.id = e.season_id
+            GROUP BY ew.user_id
+        ),
+        favorite_activity AS (
+            SELECT
+                user_id,
+                COUNT(*) AS favorites
+            FROM favorites
+            GROUP BY user_id
+        )
+        SELECT
+            u.id,
+            u.username,
+            u.email,
+            u.display_name,
+            u.is_active,
+            COALESCE(
+                ma.watched_movies,
+                0
+            ) AS watched_movies,
+            COALESCE(
+                ea.started_series,
+                0
+            ) AS started_series,
+            COALESCE(
+                ea.watched_episodes,
+                0
+            ) AS watched_episodes,
+            COALESCE(
+                fa.favorites,
+                0
+            ) AS favorites,
+            COALESCE(
+                ma.movie_minutes,
+                0
+            ) AS movie_minutes,
+            COALESCE(
+                ea.series_minutes,
+                0
+            ) AS series_minutes,
+            (
+                COALESCE(
+                    ma.watched_movies,
+                    0
+                )
+                + COALESCE(
+                    ea.watched_episodes,
+                    0
+                )
+            ) AS total_records,
+            (
+                COALESCE(
+                    ma.movie_minutes,
+                    0
+                )
+                + COALESCE(
+                    ea.series_minutes,
+                    0
+                )
+            ) AS total_minutes
+        FROM users AS u
+        LEFT JOIN movie_activity AS ma
+          ON ma.user_id = u.id
+        LEFT JOIN episode_activity AS ea
+          ON ea.user_id = u.id
+        LEFT JOIN favorite_activity AS fa
+          ON fa.user_id = u.id
+        WHERE {where_sql}
+        ORDER BY {order_by}
+        """,
+        tuple(params),
+    ).fetchall()
+
+    return rows
+
+
+def get_admin_monthly_activity(db):
+    """Agrupa la actividad global de clientes por mes."""
+
+    rows = db.execute(
+        """
+        SELECT
+            month,
+            SUM(movie_count) AS movies,
+            SUM(episode_count) AS episodes
+        FROM (
+            SELECT
+                strftime(
+                    '%Y-%m',
+                    mw.watched_at
+                ) AS month,
+                COUNT(*) AS movie_count,
+                0 AS episode_count
+            FROM movie_watches AS mw
+            JOIN users AS u
+              ON u.id = mw.user_id
+            WHERE u.role = 'client'
+            GROUP BY month
+
+            UNION ALL
+
+            SELECT
+                strftime(
+                    '%Y-%m',
+                    ew.watched_at
+                ) AS month,
+                0 AS movie_count,
+                COUNT(*) AS episode_count
+            FROM episode_watches AS ew
+            JOIN users AS u
+              ON u.id = ew.user_id
+            WHERE u.role = 'client'
+            GROUP BY month
+        ) AS activity
+        WHERE month IS NOT NULL
+        GROUP BY month
+        ORDER BY month DESC
+        LIMIT 6
+        """
+    ).fetchall()
+
+    return list(
+        reversed(
+            rows
+        )
+    )
+
+
+def build_admin_statistics_summary(rows):
+    """Resume las métricas globales de todos los clientes."""
+
+    total_clients = len(
+        rows
+    )
+
+    active_clients = sum(
+        1
+        for row in rows
+        if row["is_active"]
+    )
+
+    clients_with_activity = sum(
+        1
+        for row in rows
+        if row["total_records"] > 0
+    )
+
+    total_records = sum(
+        int(
+            row["total_records"]
+            or 0
+        )
+        for row in rows
+    )
+
+    total_minutes = sum(
+        int(
+            row["total_minutes"]
+            or 0
+        )
+        for row in rows
+    )
+
+    movie_minutes = sum(
+        int(
+            row["movie_minutes"]
+            or 0
+        )
+        for row in rows
+    )
+
+    series_minutes = sum(
+        int(
+            row["series_minutes"]
+            or 0
+        )
+        for row in rows
+    )
+
+    top_client = (
+        max(
+            rows,
+            key=lambda row: row["total_minutes"],
+        )
+        if rows
+        else None
+    )
+
+    return {
+        "total_clients": total_clients,
+        "active_clients": active_clients,
+        "clients_with_activity": clients_with_activity,
+        "total_records": total_records,
+        "total_minutes": total_minutes,
+        "total_time_text": format_admin_minutes(
+            total_minutes
+        ),
+        "movie_minutes": movie_minutes,
+        "series_minutes": series_minutes,
+        "movie_time_text": format_admin_minutes(
+            movie_minutes
+        ),
+        "series_time_text": format_admin_minutes(
+            series_minutes
+        ),
+        "top_client": top_client,
+    }
+
+
+@admin_bp.route(
+    "/statistics"
+)
+@admin_required
+def statistics():
+    """Compara la actividad audiovisual de los clientes."""
+
+    search_query = request.args.get(
+        "q",
+        "",
+    ).strip()[:100]
+
+    status = request.args.get(
+        "status",
+        "all",
+    ).strip()
+
+    sort = request.args.get(
+        "sort",
+        "time",
+    ).strip()
+
+    if status not in ADMIN_STATS_STATUS_FILTERS:
+        status = "all"
+
+    if sort not in ADMIN_STATS_SORTS:
+        sort = "time"
+
+    db = get_db()
+
+    all_clients = get_admin_client_statistics(
+        db,
+        status="all",
+        sort="time",
+    )
+
+    client_rows = get_admin_client_statistics(
+        db,
+        search_query=search_query,
+        status=status,
+        sort=sort,
+    )
+
+    summary = build_admin_statistics_summary(
+        all_clients
+    )
+
+    comparison_rows = sorted(
+        client_rows,
+        key=lambda row: (
+            row["total_minutes"],
+            row["total_records"],
+        ),
+        reverse=True,
+    )[:10]
+
+    monthly_rows = get_admin_monthly_activity(
+        db
+    )
+
+    chart_data = {
+        "clients": {
+            "labels": [
+                row["username"]
+                for row in comparison_rows
+            ],
+            "movies": [
+                round(
+                    row["movie_minutes"] / 60,
+                    2,
+                )
+                for row in comparison_rows
+            ],
+            "series": [
+                round(
+                    row["series_minutes"] / 60,
+                    2,
+                )
+                for row in comparison_rows
+            ],
+        },
+        "monthly": {
+            "labels": [
+                row["month"]
+                for row in monthly_rows
+            ],
+            "movies": [
+                int(
+                    row["movies"]
+                    or 0
+                )
+                for row in monthly_rows
+            ],
+            "episodes": [
+                int(
+                    row["episodes"]
+                    or 0
+                )
+                for row in monthly_rows
+            ],
+        },
+    }
+
+    return render_template(
+        "admin/statistics.html",
+        summary=summary,
+        clients=client_rows,
+        chart_data=chart_data,
+        search_query=search_query,
+        status=status,
+        sort=sort,
+        format_minutes=format_admin_minutes,
+    )
+

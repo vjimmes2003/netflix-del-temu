@@ -1,0 +1,267 @@
+/* FASE 11 — ESTADÍSTICAS ADMINISTRATIVAS */
+
+.admin-module-grid-three {
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+}
+
+.admin-statistics-summary {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr))
+        minmax(260px, 1.35fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.admin-statistics-card {
+    min-width: 0;
+    padding: 17px;
+    border: 1px solid #353d52;
+    border-radius: 11px;
+    background: #1b2133;
+}
+
+.admin-statistics-card span,
+.admin-statistics-panel-heading > span,
+.admin-top-client > div > span {
+    color: #8f98ab;
+    font-size: .72rem;
+    font-weight: 850;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+
+.admin-statistics-card strong {
+    display: block;
+    margin: 6px 0 3px;
+    color: #f2f3f7;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    line-height: 1;
+}
+
+.admin-statistics-card small {
+    color: #7f889c;
+}
+
+.admin-statistics-card-wide {
+    border-color: #494267;
+    background:
+        linear-gradient(
+            135deg,
+            #201f38,
+            #202941
+        );
+}
+
+.admin-top-client {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 22px;
+    margin-bottom: 16px;
+    padding: 20px 22px;
+    border: 1px solid #4a426b;
+    border-radius: 12px;
+    background:
+        linear-gradient(
+            135deg,
+            #292044,
+            #222d4b
+        );
+}
+
+.admin-top-client h2 {
+    margin: 4px 0;
+    font-size: 1.75rem;
+}
+
+.admin-top-client p {
+    margin: 0;
+    color: #999fb1;
+}
+
+.admin-top-client-number {
+    color: #d6cbff;
+    font-size: 2.4rem;
+    font-weight: 900;
+    text-align: right;
+}
+
+.admin-top-client-number small {
+    display: block;
+    color: #8f98ab;
+    font-size: .72rem;
+    font-weight: 700;
+}
+
+.admin-statistics-chart-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.admin-statistics-panel {
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid #353d52;
+    border-radius: 12px;
+    background: #1b2133;
+}
+
+.admin-statistics-panel-heading h2 {
+    margin: 5px 0 5px;
+    font-size: 1.55rem;
+}
+
+.admin-statistics-panel-heading p {
+    max-width: 620px;
+    margin: 0;
+    color: #8d96a9;
+    line-height: 1.45;
+}
+
+.admin-chart {
+    position: relative;
+    min-width: 0;
+    margin-top: 18px;
+}
+
+.admin-client-chart,
+.admin-monthly-chart {
+    height: 320px;
+}
+
+.admin-statistics-empty {
+    margin-top: 18px;
+    padding: 40px 20px;
+    border: 1px dashed #3e465b;
+    border-radius: 10px;
+    color: #7f889c;
+    text-align: center;
+}
+
+.admin-comparison-section {
+    margin-top: 6px;
+}
+
+.admin-comparison-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 14px;
+}
+
+.admin-comparison-heading h2 {
+    margin: 4px 0 0;
+    font-size: 1.7rem;
+}
+
+.admin-comparison-heading > span {
+    color: #80899b;
+    font-size: .8rem;
+}
+
+.admin-statistics-filters {
+    display: grid;
+    grid-template-columns:
+        minmax(260px, 1.7fr)
+        minmax(150px, .7fr)
+        minmax(170px, .8fr)
+        auto;
+    gap: 12px;
+    align-items: end;
+    margin-bottom: 14px;
+    padding: 15px;
+    border: 1px solid #353d52;
+    border-radius: 11px;
+    background: #1b2133;
+}
+
+.admin-statistics-filters label {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+}
+
+.admin-statistics-filters label > span {
+    color: #929bad;
+    font-size: .78rem;
+    font-weight: 750;
+}
+
+.admin-statistics-filters input,
+.admin-statistics-filters select {
+    width: 100%;
+    min-height: 42px;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border: 1px solid #3e465c;
+    border-radius: 8px;
+    outline: none;
+    background: #151a29;
+    color: #e2e4e9;
+    font: inherit;
+}
+
+.admin-statistics-filters input:focus,
+.admin-statistics-filters select:focus {
+    border-color: #785ac2;
+}
+
+.admin-statistics-filter-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.admin-statistics-table {
+    min-width: 1040px;
+}
+
+.admin-statistics-table td:nth-child(n+3) {
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 980px) {
+    .admin-module-grid-three,
+    .admin-statistics-summary,
+    .admin-statistics-chart-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-statistics-card-wide {
+        grid-column: 1 / -1;
+    }
+
+    .admin-statistics-filters {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 680px) {
+    .admin-module-grid-three,
+    .admin-statistics-summary,
+    .admin-statistics-chart-grid,
+    .admin-statistics-filters {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-statistics-card-wide {
+        grid-column: auto;
+    }
+
+    .admin-top-client,
+    .admin-comparison-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .admin-top-client-number {
+        text-align: left;
+    }
+}

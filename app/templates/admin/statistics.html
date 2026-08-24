@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+
+{% block title %}
+Estadísticas — Administración
+{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/admin_users.css'
+    ) }}"
+>
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/admin_statistics.css'
+    ) }}"
+>
+
+<main class="admin-page admin-statistics-page">
+
+    <section class="admin-heading">
+
+        <div>
+            <a
+                href="{{ url_for('admin.dashboard') }}"
+                class="admin-back-link"
+            >
+                ← Panel de administración
+            </a>
+
+            <p class="eyebrow">
+                ADMINISTRACIÓN
+            </p>
+
+            <h1>
+                Estadísticas
+            </h1>
+
+            <p>
+                Comparación de actividad entre clientes.
+            </p>
+        </div>
+
+        <a
+            href="{{ url_for('admin.users') }}"
+            class="admin-secondary-link"
+        >
+            Ver usuarios
+        </a>
+
+    </section>
+
+
+    <section class="admin-statistics-summary">
+
+        <article class="admin-statistics-card">
+            <span>Clientes</span>
+            <strong>{{ summary["total_clients"] }}</strong>
+            <small>
+                {{ summary["active_clients"] }} activos
+            </small>
+        </article>
+
+        <article class="admin-statistics-card">
+            <span>Con actividad</span>
+            <strong>{{ summary["clients_with_activity"] }}</strong>
+            <small>
+                han registrado contenido visto
+            </small>
+        </article>
+
+        <article class="admin-statistics-card">
+            <span>Registros</span>
+            <strong>{{ summary["total_records"] }}</strong>
+            <small>
+                películas + episodios
+            </small>
+        </article>
+
+        <article class="admin-statistics-card admin-statistics-card-wide">
+            <span>Tiempo total</span>
+            <strong>{{ summary["total_time_text"] }}</strong>
+            <small>
+                Películas {{ summary["movie_time_text"] }} ·
+                Series {{ summary["series_time_text"] }}
+            </small>
+        </article>
+
+    </section>
+
+
+    {% if summary["top_client"] %}
+
+        <section class="admin-top-client">
+            <div>
+                <span>CLIENTE CON MÁS TIEMPO REGISTRADO</span>
+                <h2>
+                    {{
+                        summary["top_client"]["display_name"]
+                        or summary["top_client"]["username"]
+                    }}
+                </h2>
+                <p>
+                    @{{ summary["top_client"]["username"] }} ·
+                    {{
+                        format_minutes(
+                            summary["top_client"]["total_minutes"]
+                        )
+                    }}
+                </p>
+            </div>
+
+            <div class="admin-top-client-number">
+                {{ summary["top_client"]["total_records"] }}
+                <small>registros</small>
+            </div>
+        </section>
+
+    {% endif %}
+
+
+    <section class="admin-statistics-chart-grid">
+
+        <article class="admin-statistics-panel">
+            <div class="admin-statistics-panel-heading">
+                <span>COMPARACIÓN</span>
+                <h2>Tiempo por cliente</h2>
+                <p>
+                    Hasta diez clientes del resultado actual,
+                    separados entre películas y series.
+                </p>
+            </div>
+
+            {% if chart_data["clients"]["labels"] %}
+                <div class="admin-chart admin-client-chart">
+                    <canvas id="adminClientChart"></canvas>
+                </div>
+            {% else %}
+                <div class="admin-statistics-empty">
+                    No hay clientes que mostrar.
+                </div>
+            {% endif %}
+        </article>
+
+
+        <article class="admin-statistics-panel">
+            <div class="admin-statistics-panel-heading">
+                <span>ACTIVIDAD GLOBAL</span>
+                <h2>Registros por mes</h2>
+                <p>
+                    Películas y episodios registrados por todos
+                    los clientes durante los últimos meses con actividad.
+                </p>
+            </div>
+
+            {% if chart_data["monthly"]["labels"] %}
+                <div class="admin-chart admin-monthly-chart">
+                    <canvas id="adminMonthlyChart"></canvas>
+                </div>
+            {% else %}
+                <div class="admin-statistics-empty">
+                    Todavía no existe actividad mensual.
+                </div>
+            {% endif %}
+        </article>
+
+    </section>
+
+
+    <section class="admin-comparison-section">
+
+        <div class="admin-comparison-heading">
+            <div>
+                <p class="eyebrow">
+                    COMPARAR CLIENTES
+                </p>
+                <h2>
+                    Actividad individual
+                </h2>
+            </div>
+
+            <span>
+                {{ clients | length }} resultados
+            </span>
+        </div>
+
+
+        <form
+            method="get"
+            class="admin-statistics-filters"
+        >
+
+            <label class="admin-statistics-search">
+                <span>Buscar cliente</span>
+                <input
+                    type="search"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Usuario, nombre o correo..."
+                    maxlength="100"
+                >
+            </label>
+
+            <label>
+                <span>Estado</span>
+                <select name="status">
+                    <option
+                        value="all"
+                        {% if status == "all" %}selected{% endif %}
+                    >
+                        Todos
+                    </option>
+                    <option
+                        value="active"
+                        {% if status == "active" %}selected{% endif %}
+                    >
+                        Activos
+                    </option>
+                    <option
+                        value="inactive"
+                        {% if status == "inactive" %}selected{% endif %}
+                    >
+                        Inactivos
+                    </option>
+                </select>
+            </label>
+
+            <label>
+                <span>Ordenar</span>
+                <select name="sort">
+                    <option
+                        value="time"
+                        {% if sort == "time" %}selected{% endif %}
+                    >
+                        Más tiempo
+                    </option>
+                    <option
+                        value="records"
+                        {% if sort == "records" %}selected{% endif %}
+                    >
+                        Más registros
+                    </option>
+                    <option
+                        value="favorites"
+                        {% if sort == "favorites" %}selected{% endif %}
+                    >
+                        Más favoritos
+                    </option>
+                    <option
+                        value="username"
+                        {% if sort == "username" %}selected{% endif %}
+                    >
+                        Usuario A-Z
+                    </option>
+                </select>
+            </label>
+
+            <div class="admin-statistics-filter-actions">
+                <button
+                    type="submit"
+                    class="admin-primary-button"
+                >
+                    Aplicar
+                </button>
+
+                <a
+                    href="{{ url_for('admin.statistics') }}"
+                    class="admin-secondary-link"
+                >
+                    Limpiar
+                </a>
+            </div>
+
+        </form>
+
+
+        <section class="admin-table-card">
+            <div class="admin-table-scroll">
+                <table class="admin-table admin-statistics-table">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Estado</th>
+                            <th>Películas</th>
+                            <th>Series</th>
+                            <th>Episodios</th>
+                            <th>Favoritos</th>
+                            <th>Registros</th>
+                            <th>Tiempo</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for client in clients %}
+                            <tr
+                                {% if not client["is_active"] %}
+                                    class="admin-row-inactive"
+                                {% endif %}
+                            >
+                                <td>
+                                    <strong>
+                                        {{
+                                            client["display_name"]
+                                            or client["username"]
+                                        }}
+                                    </strong>
+                                    <small>
+                                        @{{ client["username"] }}
+                                    </small>
+                                </td>
+
+                                <td>
+                                    {% if client["is_active"] %}
+                                        <span
+                                            class="admin-status
+                                                   admin-status-active"
+                                        >
+                                            Activo
+                                        </span>
+                                    {% else %}
+                                        <span
+                                            class="admin-status
+                                                   admin-status-inactive"
+                                        >
+                                            Inactivo
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>{{ client["watched_movies"] }}</td>
+                                <td>{{ client["started_series"] }}</td>
+                                <td>{{ client["watched_episodes"] }}</td>
+                                <td>{{ client["favorites"] }}</td>
+                                <td>
+                                    <strong>
+                                        {{ client["total_records"] }}
+                                    </strong>
+                                </td>
+                                <td>
+                                    <strong>
+                                        {{
+                                            format_minutes(
+                                                client["total_minutes"]
+                                            )
+                                        }}
+                                    </strong>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td
+                                    colspan="8"
+                                    class="admin-empty-cell"
+                                >
+                                    No hay clientes que coincidan
+                                    con los filtros.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+    window.adminStatisticsData = {{ chart_data | tojson }};
+</script>
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/admin_statistics.js'
+    ) }}"
+></script>
+
+{% endblock %}

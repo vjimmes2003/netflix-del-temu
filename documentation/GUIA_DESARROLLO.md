@@ -813,6 +813,102 @@ feat: add user profile and viewing statistics
 
 ---
 
+# Fase 11 — Estadísticas administrativas
+
+## Objetivo
+Permitir al administrador consultar y comparar la actividad de los clientes mediante métricas, gráficas y tablas.
+
+## Acceso
+Se añadió `/admin/statistics`, integrado en `/admin/` junto a Usuarios y Catálogo.
+
+La ruta está protegida para administradores.
+
+## Resumen global
+La vista calcula mediante SQL:
+- clientes totales y con actividad;
+- registros de películas y episodios;
+- tiempo total registrado;
+- cliente con mayor tiempo de reproducción.
+
+## Comparación
+Chart.js muestra:
+- tiempo por cliente, separado entre películas y series;
+- actividad global agrupada por mes.
+
+La tabla individual incluye estado, películas, series empezadas, episodios, favoritos, registros y tiempo total.
+
+Puede buscarse por usuario, nombre o correo, filtrar por estado y ordenar por tiempo, registros, favoritos o nombre.
+
+## Datos de demostración
+Se añadió:
+```text
+scripts/generate_demo_users.py
+```
+
+El script genera 10 clientes de prueba con perfiles de uso diferentes y actividad distribuida durante los últimos seis meses.
+
+Utiliza una semilla fija para obtener datos reproducibles y emplea contenidos reales ya almacenados en SQLite.
+
+Ejecución:
+```powershell
+python scripts/generate_demo_users.py
+```
+
+Limpieza:
+```powershell
+python scripts/generate_demo_users.py --clean
+```
+
+Solo elimina cuentas cuyo usuario empieza por `demo_` y sus relaciones de actividad.
+
+No modifica el catálogo ni los usuarios reales.
+
+## Base de datos
+No se añadieron tablas nuevas.
+
+Las estadísticas se obtienen dinámicamente desde `users`, `movie_watches`, `episode_watches`, `favorites`, `media`, `seasons` y `episodes`.
+
+## Archivos principales
+```text
+app/admin.py
+app/templates/admin/dashboard.html
+app/templates/admin/statistics.html
+app/static/css/admin_statistics.css
+app/static/js/admin_statistics.js
+scripts/generate_demo_users.py
+```
+
+## Evidencias
+```text
+documentation/screenshots/fase11_01_estadisticas_panel_administracion.png
+documentation/screenshots/fase11_02_vista_estadisticas.png
+documentation/screenshots/fase11_03_resto_vista_estadisticas.png
+documentation/screenshots/fase11_04_uso_de_filtros_en_tabla_de_actividad_individual.png
+documentation/screenshots/fase11_05_intento_acceder_admin_sin_permisos.png
+documentation/screenshots/fase11_06_vista_estadisticas_usuarios_demo.png
+documentation/screenshots/fase11_07_vista_estadisticas_usuarios_demo_tabla.png
+```
+
+## Validación
+- métricas globales calculadas desde SQLite;
+- comparación entre clientes operativa;
+- actividad mensual representada;
+- búsqueda, filtros y ordenación correctos;
+- clientes activos e inactivos diferenciados;
+- acceso de cliente normal bloqueado;
+- generación demo reproducible;
+- limpieza limitada a cuentas `demo_`;
+- estadísticas actualizadas al generar o limpiar datos.
+
+## Commit
+```text
+feat: add admin statistics and demo activity generator
+```
+
+**Estado: completada.**
+
+---
+
 # Fuentes técnicas
 
 - Flask: https://flask.palletsprojects.com/
