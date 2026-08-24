@@ -294,6 +294,21 @@ python -m flask --app run --debug run
 # Terminal 2: scripts, pruebas, migraciones y Git
 ```
 
+## Evidencias
+Directorio: `documentation/screenshots/`
+
+```text
+fase5_01_catalogo_peliculas.png
+fase5_02_catalogo_series.png
+fase5_03_detalle_pelicula.png
+fase5_04_detalle_serie.png
+fase5_05_mature_desactivado.png
+fase5_06_confirmacion_mature.png
+fase5_07_mature_activado.png
+fase5_08_explicito_bloqueado.png
+fase5_08_explicito_bloqueado2.png
+```
+
 ## Commit
 ```text
 feat: build catalog and content filtering
@@ -392,6 +407,18 @@ Esto permite mantener búsqueda, género, orden y tipo durante la navegación.
 
 El estilo definitivo se revisará en la fase general de diseño y UX.
 
+## Evidencias
+Directorio: `documentation/screenshots/`
+
+```text
+fase6_01_busqueda_titulo.png
+fase6_02_filtro_genero.png
+fase6_03_busqueda_combinada.png
+fase6_04_orden_popularidad.png
+fase6_05_orden_recientes.png
+fase6_06_sin_resultados.png
+```
+
 ## Commit
 ```text
 feat: add catalog and filtering
@@ -462,22 +489,25 @@ app/static/css/activity.css
 ```
 
 ## Evidencias
-Se guardaron capturas de:
-- favorito desde ficha y lista de favoritos;
-- película vista y lista de vistos;
-- temporadas y episodios;
-- episodios y temporada completados;
-- progreso global y serie al 100 %;
-- serie dentro de Vistos;
-- control `mature` en Favoritos y Vistos.
+Directorio: `documentation/screenshots/`
 
-Rango de evidencias:
 ```text
-documentation/screenshots/fase7_01_*.png
-...
-documentation/screenshots/fase7_13_*.png
+fase7_01_favorito_ficha.png
+fase7_02_lista_favoritos.png
+fase7_03_pelicula_vista.png
+fase7_04_lista_vistos.png
+fase7_05_temporadas_serie.png
+fase7_06_episodios_temporada.png
+fase7_07_episodios_vistos.png
+fase7_08_temporada_completada.png
+fase7_09_progreso_serie.png
+fase7_10_serie_completada.png
+fase7_11_serie_en_vistos.png
+fase7_12_con_mature_favoritos.png
+fase7_12_sin_mature_favoritos.png
+fase7_13_con_mature_vistos.png
+fase7_13_sin_mature_vistos.png
 ```
-
 ## Validación
 - favoritos e historial independientes por usuario;
 - persistencia después de recargar y volver a iniciar sesión;
@@ -560,15 +590,18 @@ app/static/css/admin_users.css
 ```
 
 ## Evidencias
-```text
-documentation/screenshots/fase8_01_panel_admin.png
-documentation/screenshots/fase8_02_lista_usuarios.png
-documentation/screenshots/fase8_03_crear_cliente.png
-documentation/screenshots/fase8_04_editar_cliente.png
-documentation/screenshots/fase8_05_cliente_inactivo.png
-documentation/screenshots/fase8_06_login_usuario_baneado.png
-```
+Directorio: `documentation/screenshots/`
 
+```text
+fase8_01_panel_admin.png
+fase8_02_lista_usuarios.png
+fase8_03_crear_cliente.png
+fase8_04_cliente_editado.png
+fase8_04__editar_cliente.png
+fase8_05_cliente_inactivo_antes_de_morir.png
+fase8_05_cliente_inactivo_ya_murio.png
+fase8_05__cliente_inactivo.png
+```
 ## Validación
 - acceso restringido a administradores;
 - creación y edición correctas;
@@ -582,6 +615,198 @@ documentation/screenshots/fase8_06_login_usuario_baneado.png
 ## Commit
 ```text
 feat: add admin user management and account suspension
+```
+
+**Estado: completada.**
+
+---
+
+# Fase 9 — Administración del catálogo
+
+## Objetivo
+Implementar el CRUD administrativo de películas y series.
+
+## Implementación
+Se habilitó `/admin/catalog` con contadores, búsqueda, paginación y filtros por tipo, estado, origen y clasificación.
+
+Clasificaciones disponibles:
+```text
+general
+mature
+explicit
+```
+
+## Creación manual
+Desde `/admin/catalog/create` se pueden crear películas y series.
+
+Campos principales:
+- título y título original;
+- sinopsis, fecha e idioma;
+- portada y fondo;
+- certificación y nivel de contenido;
+- géneros/categorías.
+
+Las películas requieren duración.
+
+Las series pueden generar estructura inicial indicando temporadas, episodios por temporada y duración de episodio.
+La estructura queda integrada con el seguimiento de la Fase 7.
+
+## Edición
+Se pueden editar contenidos manuales o importados desde TMDB.
+
+En contenido TMDB se conservan `tmdb_id` y origen.
+El tipo película/serie queda bloqueado después de crear para proteger temporadas, episodios y actividad.
+
+## Eliminación lógica
+Eliminar usa `is_visible = 0`.
+El contenido deja de mostrarse al cliente y su acceso directo devuelve 404.
+
+Restaurar usa `is_visible = 1`.
+Así se conservan temporadas, relaciones, favoritos y progreso.
+
+## Política de contenido
+El administrador puede gestionar `general`, `mature` y `explicit`.
+Para clientes, `explicit` sigue bloqueado y `mature` depende de su preferencia.
+
+## Archivos principales
+```text
+app/admin.py
+app/templates/admin/dashboard.html
+app/templates/admin/media_list.html
+app/templates/admin/media_form.html
+app/static/css/admin_catalog.css
+```
+
+## Evidencias
+```text
+documentation/screenshots/fase9_01_listado_admin.png
+documentation/screenshots/fase9_02_filtros_catalogo.png
+documentation/screenshots/fase9_03_contenido_explicito.png
+documentation/screenshots/fase9_04_pelicula_manual.png
+documentation/screenshots/fase9_05_pelicula_manual_resultado.png
+documentation/screenshots/fase9_06_serie_manual.png
+documentation/screenshots/fase9_07_serie_manual_resultado.png
+documentation/screenshots/fase9_08_editar_contenido.png
+documentation/screenshots/fase9_09_eliminar_media.png
+documentation/screenshots/fase9_10_eliminar_media_resultado.png
+documentation/screenshots/fase9_10_eliminar_media_resultado2.png
+documentation/screenshots/fase9_11__restaurar_media.png
+documentation/screenshots/fase9_11_restaurar_media_resultado.png
+```
+
+## Validación
+- listado, búsqueda, filtros y paginación correctos;
+- filtro general/mature/explicit correcto;
+- creación de películas y series manuales;
+- creación de temporadas/episodios correcta;
+- edición TMDB conserva identificadores;
+- eliminación lógica oculta al cliente;
+- acceso eliminado devuelve 404;
+- restauración recupera el contenido;
+- rutas restringidas al administrador.
+
+## Commit
+```text
+feat: add admin media catalog management
+```
+
+**Estado: completada.**
+
+---
+
+# Fase 10 — Perfil y estadísticas del usuario
+
+## Objetivo
+Añadir un perfil personal y estadísticas calculadas desde la actividad real del cliente.
+
+## Perfil
+Se creó `/profile`.
+
+`Perfil` aparece únicamente en la navegación global y no como pestaña interna del catálogo.
+
+Muestra identidad del usuario, tiempo total, películas vistas, series empezadas, episodios vistos, series completadas, favoritos y accesos a estadísticas, historial y preferencias.
+
+## Estadísticas
+Se creó `/statistics`.
+
+El resumen calcula mediante SQL:
+- tiempo total y reparto películas/series;
+- películas vistas;
+- series empezadas y completadas;
+- episodios vistos;
+- favoritos;
+- géneros principales;
+- actividad mensual.
+
+No existe una tabla de estadísticas: se consultan las tablas de actividad y catálogo directamente.
+
+## Visualización
+Chart.js representa el reparto de tiempo, los géneros más vistos y la actividad mensual.
+
+La interfaz utiliza una paleta reducida:
+```text
+azul noche
+violeta
+azul
+```
+
+Blanco y grises se reservan como neutros.
+
+El resumen es permanente y se actualiza con cada cambio en la actividad registrada.
+
+## Cálculos
+Las películas usan `media.runtime_minutes`.
+
+Las series suman `episodes.runtime_minutes` de episodios vistos.
+
+Un registro sin duración aporta 0 minutos.
+
+Una serie se considera completada cuando están vistos todos los episodios disponibles localmente.
+
+## Diseño pendiente
+La versión actual queda funcional y responsive.
+
+El aprovechamiento de pantallas 16:9, anchos, Flexbox/Grid y el pulido responsive global se revisarán en la Fase 12 de diseño y UX.
+
+## Archivos principales
+```text
+app/__init__.py
+app/statistics.py
+app/templates/base.html
+app/templates/profile.html
+app/templates/statistics.html
+app/templates/catalog.html
+app/templates/favorites.html
+app/templates/watched.html
+app/static/css/shell.css
+app/static/css/profile.css
+app/static/css/statistics.css
+app/static/js/statistics.js
+```
+
+## Evidencias
+```text
+documentation/screenshots/fase10_01_perfil_completo.png
+documentation/screenshots/fase10_02_estadisticas_usuario.png
+documentation/screenshots/fase10_03_resto_estadisticas.png
+documentation/screenshots/fase10_04_estadisticas_usuario_actual.png
+documentation/screenshots/fase10_05_resto_estadisticas_actual.png
+```
+
+## Validación
+- perfil independiente por usuario;
+- estadísticas obtenidas desde SQLite;
+- tiempos, contadores y series completadas correctos;
+- géneros y actividad mensual representados;
+- actualización al modificar historial;
+- comprobación con cuentas de distinto volumen;
+- navegación Perfil → Estadísticas correcta;
+- Perfil eliminado de las pestañas del catálogo;
+- acceso protegido por autenticación.
+
+## Commit
+```text
+feat: add user profile and viewing statistics
 ```
 
 **Estado: completada.**

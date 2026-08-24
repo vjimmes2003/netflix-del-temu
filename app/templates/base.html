@@ -1,74 +1,113 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>{% block title %}Netflix del Temu{% endblock %}</title>
 
     <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-  </head>
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/shell.css') }}"
+    >
 
-  <body>
-    <header class="site-header">
-      <a href="{{ url_for('index') }}" class="brand"> Netflix del Temu </a>
+    {% block head %}{% endblock %}
+</head>
+<body>
 
-      <nav class="nav">
-        {% if current_user.is_authenticated %}
-
-        <a
-          href="{{ url_for(
-        'catalog.catalog',
-        type='movie'
-    ) }}"
-        >
-          Películas
-        </a>
+<header class="site-shell-header">
+    <div class="site-shell-inner">
 
         <a
-          href="{{ url_for(
-        'catalog.catalog',
-        type='series'
-    ) }}"
+            class="site-shell-brand"
+            href="{{ url_for('index') }}"
+            aria-label="Netflix del Temu"
         >
-          Series
+            Netflix del Temu
         </a>
 
-        {% if current_user.role == "admin" %}
-        <a href="{{ url_for('admin.dashboard') }}"> Administración </a>
-        {% endif %}
+        <nav class="site-shell-nav" aria-label="Navegación principal">
 
-        <span class="user-name"> {{ current_user.display_name }} </span>
+            {% if current_user.is_authenticated %}
 
-        <form
-          method="post"
-          action="{{ url_for('auth.logout') }}"
-          class="logout-form"
-        >
-          <button type="submit" class="nav-button">Cerrar sesión</button>
-        </form>
+                <a
+                    href="{{ url_for('catalog.catalog', type='movie') }}"
+                    class="{% if request.endpoint == 'catalog.catalog' and request.args.get('type', 'movie') == 'movie' %}active{% endif %}"
+                >
+                    Películas
+                </a>
 
-        {% else %}
+                <a
+                    href="{{ url_for('catalog.catalog', type='series') }}"
+                    class="{% if request.endpoint == 'catalog.catalog' and request.args.get('type') == 'series' %}active{% endif %}"
+                >
+                    Series
+                </a>
 
-        <a href="{{ url_for('auth.login') }}"> Iniciar sesión </a>
+                <a
+                    href="{{ url_for('statistics.user_profile') }}"
+                    class="{% if request.endpoint in ('statistics.user_profile', 'statistics.user_statistics') %}active profile-link{% else %}profile-link{% endif %}"
+                >
+                    Perfil
+                </a>
 
-        <a href="{{ url_for('auth.register') }}"> Crear cuenta </a>
+                {% if current_user.role == 'admin' %}
+                    <a
+                        href="{{ url_for('admin.dashboard') }}"
+                        class="{% if request.blueprint == 'admin' %}active{% endif %}"
+                    >
+                        Administración
+                    </a>
+                {% endif %}
 
-        {% endif %}
-      </nav>
-    </header>
+                <span class="site-shell-user">
+                    {{ current_user.display_name or current_user.username }}
+                </span>
 
-    {% with messages = get_flashed_messages(with_categories=true) %} {% if
-    messages %}
-    <div class="flash-container">
-      {% for category, message in messages %}
-      <div class="flash flash-{{ category }}">{{ message }}</div>
-      {% endfor %}
+                <form
+                    method="post"
+                    action="{{ url_for('auth.logout') }}"
+                    class="site-shell-logout-form"
+                >
+                    <button type="submit" class="site-shell-logout">
+                        Cerrar sesión
+                    </button>
+                </form>
+
+            {% else %}
+
+                <a href="{{ url_for('auth.login') }}">
+                    Iniciar sesión
+                </a>
+
+                <a href="{{ url_for('auth.register') }}" class="profile-link">
+                    Crear cuenta
+                </a>
+
+            {% endif %}
+
+        </nav>
+
     </div>
-    {% endif %} {% endwith %} {% block content %}{% endblock %}
-  </body>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="site-shell-flashes" aria-live="polite">
+            {% for category, message in messages %}
+                <div class="site-shell-flash site-shell-flash-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+</body>
 </html>

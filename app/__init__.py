@@ -46,6 +46,10 @@ def create_app():
 
     app.register_blueprint(activity_bp)
 
+    from .statistics import statistics_bp
+
+    app.register_blueprint(statistics_bp)
+
     from .admin import admin_bp
 
     app.register_blueprint(admin_bp)

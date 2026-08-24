@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}
+Mi perfil — Netflix del Temu
+{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/profile.css') }}"
+>
+
+<main class="profile-page">
+
+    <section class="profile-hero">
+
+        <div class="profile-hero-orb profile-orb-one"></div>
+        <div class="profile-hero-orb profile-orb-two"></div>
+
+        <div class="profile-identity">
+
+            <div class="profile-avatar">
+                {{ profile_initials }}
+            </div>
+
+            <div>
+                <p class="profile-kicker">TU ESPACIO</p>
+                <h1>{{ current_user.display_name or current_user.username }}</h1>
+                <p class="profile-handle">@{{ current_user.username }}</p>
+                <p class="profile-email">{{ current_user.email }}</p>
+            </div>
+
+        </div>
+
+        <div class="profile-hero-stat">
+            <span>TIEMPO REGISTRADO</span>
+            <strong>{{ overview["total_time_text"] }}</strong>
+            <small>entre películas y episodios vistos</small>
+        </div>
+
+    </section>
+
+
+    <section class="profile-snapshot">
+
+        <article class="profile-number-card violet">
+            <span>Películas</span>
+            <strong>{{ overview["watched_movies"] }}</strong>
+            <small>vistas</small>
+        </article>
+
+        <article class="profile-number-card pink">
+            <span>Series</span>
+            <strong>{{ overview["started_series"] }}</strong>
+            <small>empezadas</small>
+        </article>
+
+        <article class="profile-number-card cyan">
+            <span>Episodios</span>
+            <strong>{{ overview["watched_episodes"] }}</strong>
+            <small>vistos</small>
+        </article>
+
+        <article class="profile-number-card lime">
+            <span>Completadas</span>
+            <strong>{{ overview["completed_series"] }}</strong>
+            <small>series al 100 %</small>
+        </article>
+
+    </section>
+
+
+    <section class="profile-feature-grid">
+
+        <a
+            class="profile-feature profile-feature-stats"
+            href="{{ url_for('statistics.user_statistics') }}"
+        >
+            <div>
+                <span class="profile-feature-label">TU RESUMEN</span>
+                <h2>Mis estadísticas</h2>
+                <p>
+                    Tu actividad convertida en colores, gráficos
+                    y datos que puedes consultar cuando quieras.
+                </p>
+            </div>
+
+            <div class="profile-feature-big">
+                {{ overview["total_time_text"] }}
+            </div>
+
+            <span class="profile-feature-action">Ver resumen →</span>
+        </a>
+
+        <a
+            class="profile-feature profile-feature-favorites"
+            href="{{ url_for('activity.favorites') }}"
+        >
+            <span class="profile-feature-label">GUARDADOS</span>
+            <h2>Favoritos</h2>
+            <strong>{{ overview["favorites"] }}</strong>
+            <p>películas y series guardadas</p>
+            <span class="profile-feature-action">Abrir favoritos →</span>
+        </a>
+
+        <a
+            class="profile-feature profile-feature-watched"
+            href="{{ url_for('activity.watched') }}"
+        >
+            <span class="profile-feature-label">HISTORIAL</span>
+            <h2>Vistos</h2>
+            <strong>{{ overview["watched_movies"] + overview["watched_episodes"] }}</strong>
+            <p>películas y episodios registrados</p>
+            <span class="profile-feature-action">Abrir vistos →</span>
+        </a>
+
+        <a
+            class="profile-feature profile-feature-settings"
+            href="{{ url_for('catalog.content_settings') }}"
+        >
+            <span class="profile-feature-label">CUENTA</span>
+            <h2>Preferencias</h2>
+            <p>
+                Gestiona la visibilidad del contenido maduro
+                de tu catálogo.
+            </p>
+            <span class="profile-feature-action">Abrir preferencias →</span>
+        </a>
+
+    </section>
+
+</main>
+
+{% endblock %}
